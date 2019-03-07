@@ -17,34 +17,22 @@ limitations under the License.
 package main
 
 import (
+	"github.com/fusor/ocp-velero-plugin/velero-plugins/imagestream"
 	veleroplugin "github.com/heptio/velero/pkg/plugin"
 	"github.com/sirupsen/logrus"
 )
 
 func main() {
 	veleroplugin.NewServer(veleroplugin.NewLogger()).
-		RegisterBackupItemAction("backup-plugin", newBackupPlugin).
 		RegisterBackupItemAction("is-backup-plugin", newImageStreamBackupPlugin).
-		RegisterRestoreItemAction("restore-plugin", newRestorePlugin).
+		RegisterRestoreItemAction("is-restore-plugin", newImageStreamRestorePlugin).
 		Serve()
 }
 
-func newBackupPlugin(logger logrus.FieldLogger) (interface{}, error) {
-	return &BackupPlugin{log: logger}, nil
-}
-
-func newFileObjectStore(logger logrus.FieldLogger) (interface{}, error) {
-	return &FileObjectStore{log: logger}, nil
-}
-
-func newRestorePlugin(logger logrus.FieldLogger) (interface{}, error) {
-	return &MyRestorePlugin{log: logger}, nil
-}
-
-func newNoOpBlockStore(logger logrus.FieldLogger) (interface{}, error) {
-	return &NoOpBlockStore{FieldLogger: logger}, nil
-}
-
 func newImageStreamBackupPlugin(logger logrus.FieldLogger) (interface{}, error) {
-	return &ImageStreamBackupPlugin{log: logger}, nil
+	return &imagestream.BackupPlugin{Log: logger}, nil
+}
+
+func newImageStreamRestorePlugin(logger logrus.FieldLogger) (interface{}, error) {
+	return &imagestream.RestorePlugin{Log: logger}, nil
 }

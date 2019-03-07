@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package main
+package imagestream
 
 import (
 	"github.com/heptio/velero/pkg/apis/velero/v1"
@@ -25,17 +25,17 @@ import (
 )
 
 // MyRestorePlugin is a restore item action plugin for Velero
-type MyRestorePlugin struct {
-	log logrus.FieldLogger
+type RestorePlugin struct {
+	Log logrus.FieldLogger
 }
 
 // AppliesTo returns a restore.ResourceSelector that applies to everything
-func (p *MyRestorePlugin) AppliesTo() (restore.ResourceSelector, error) {
+func (p *RestorePlugin) AppliesTo() (restore.ResourceSelector, error) {
 	return restore.ResourceSelector{}, nil
 }
 
-func (p *MyRestorePlugin) Execute(item runtime.Unstructured, restore *v1.Restore) (runtime.Unstructured, error, error) {
-	p.log.Info("Hello from OCP RestorePlugin!")
+func (p *RestorePlugin) Execute(item runtime.Unstructured, restore *v1.Restore) (runtime.Unstructured, error, error) {
+	p.Log.Info("Hello from BuildConfig RestorePlugin!")
 
 	metadata, err := meta.Accessor(item)
 	if err != nil {
@@ -47,7 +47,7 @@ func (p *MyRestorePlugin) Execute(item runtime.Unstructured, restore *v1.Restore
 		annotations = make(map[string]string)
 	}
 
-	annotations["openshift.io/my-restore-plugin"] = "1"
+	annotations["openshift.io/buildconfig-restore-plugin"] = "1"
 
 	metadata.SetAnnotations(annotations)
 

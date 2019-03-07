@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package main
+package imagestream
 
 import (
 	"fmt"
@@ -22,8 +22,8 @@ import (
 	"github.com/sirupsen/logrus"
 	"strings"
 
-	imagev1API "github.com/openshift/api/image/v1"
-	imagev1 "github.com/openshift/client-go/image/clientset/versioned/typed/image/v1"
+	buildv1API "github.com/openshift/api/build/v1"
+	buildv1 "github.com/openshift/client-go/build/clientset/versioned/typed/build/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -34,20 +34,20 @@ import (
 )
 
 // BackupPlugin is a backup item action plugin for Heptio Ark.
-type ImageStreamBackupPlugin struct {
-	log logrus.FieldLogger
+type BackupPlugin struct {
+	Log logrus.FieldLogger
 }
 
 // AppliesTo returns a backup.ResourceSelector that applies to everything.
-func (p *ImageStreamBackupPlugin) AppliesTo() (backup.ResourceSelector, error) {
+func (p *BackupPlugin) AppliesTo() (backup.ResourceSelector, error) {
 	return backup.ResourceSelector{
-		IncludedResources: []string{"imagestreams"},
+		IncludedResources: []string{"buildconfigs"},
 	}, nil
 }
 
 // Execute sets a custom annotation on the item being backed up.
-func (p *ImageStreamBackupPlugin) Execute(item runtime.Unstructured, backup *v1.Backup) (runtime.Unstructured, []backup.ResourceIdentifier, error) {
-	p.log.Info("Hello from Imagestream backup plugin!!")
+func (p *BackupPlugin) Execute(item runtime.Unstructured, backup *v1.Backup) (runtime.Unstructured, []backup.ResourceIdentifier, error) {
+	p.Log.Info("Hello from Build Config backup plugin!")
 
 	metadata, err := meta.Accessor(item)
 	if err != nil {
@@ -59,40 +59,23 @@ func (p *ImageStreamBackupPlugin) Execute(item runtime.Unstructured, backup *v1.
 		annotations = make(map[string]string)
 	}
 
-	annotations["openshift.io/imagestream-plugin"] = "1"
+	annotations["openshift.io/buildconfig-plugin"] = "1"
 
-	im := imagev1API.ImageStream{}
-	obj := item.UnstructuredContent()
-	mapstructure.Decode(obj, &im)
-	p.log.Info(fmt.Sprintf("image: %#v", im.Status))
-	dockerRepo := im.Status.DockerImageRepository
-
-	// Get associated image and export to scratch location
-	client, err := p.imageClient()
+	/*client, err := p.buildClient()
 	if err != nil {
 		return nil, nil, err
-	}
-	images, err := client.Images().List(metav1.ListOptions{})
-	if err != nil {
-		return nil, nil, err
-	}
-	for _, image := range images.Items {
-		repo := strings.Split(image.DockerImageReference, "@")[0]
-		if repo == dockerRepo {
-			annotations["openshift.io/dockerImageRepo"] = repo
-		}
-	}
+	}*/
 	metadata.SetAnnotations(annotations)
 
 	return item, nil, nil
 }
 
-func (p *ImageStreamBackupPlugin) imageClient() (*imagev1.ImageV1Client, error) {
+func (p *BackupPlugin) buildClient() (*buildv1.BuildV1Client, error) {
 	config, err := rest.InClusterConfig()
 	if err != nil {
 		return nil, err
 	}
-	client, err := imagev1.NewForConfig(config)
+	client, err := buildv1.NewForConfig(config)
 	if err != nil {
 		return nil, err
 	}

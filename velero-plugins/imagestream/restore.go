@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package main
+package imagestream
 
 import (
 	"github.com/heptio/velero/pkg/apis/velero/v1"
@@ -25,17 +25,17 @@ import (
 )
 
 // MyRestorePlugin is a restore item action plugin for Velero
-type ImageStreamRestorePlugin struct {
-	log logrus.FieldLogger
+type RestorePlugin struct {
+	Log logrus.FieldLogger
 }
 
 // AppliesTo returns a restore.ResourceSelector that applies to everything
-func (p *ImageStreamRestorePlugin) AppliesTo() (restore.ResourceSelector, error) {
+func (p *RestorePlugin) AppliesTo() (restore.ResourceSelector, error) {
 	return restore.ResourceSelector{}, nil
 }
 
-func (p *ImageStreamRestorePlugin) Execute(item runtime.Unstructured, restore *v1.Restore) (runtime.Unstructured, error, error) {
-	p.log.Info("Hello from ImageStream RestorePlugin!")
+func (p *RestorePlugin) Execute(item runtime.Unstructured, restore *v1.Restore) (runtime.Unstructured, error, error) {
+	p.Log.Info("Hello from ImageStream RestorePlugin!")
 
 	metadata, err := meta.Accessor(item)
 	if err != nil {

@@ -28,6 +28,8 @@ func main() {
 	veleroplugin.NewServer(veleroplugin.NewLogger()).
 		RegisterBackupItemAction("is-backup-plugin", newImageStreamBackupPlugin).
 		RegisterRestoreItemAction("is-restore-plugin", newImageStreamRestorePlugin).
+		RegisterBackupItemAction("route-backup-plugin", newRouteBackupPlugin).
+		RegisterRestoreItemAction("route-restore-plugin", newRouteRestorePlugin).
 		Serve()
 }
 

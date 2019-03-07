@@ -38,7 +38,7 @@ type BackupPlugin struct {
 // AppliesTo returns a backup.ResourceSelector that applies to everything.
 func (p *BackupPlugin) AppliesTo() (backup.ResourceSelector, error) {
 	return backup.ResourceSelector{
-		IncludedResources: []string{"buildconfigs"},
+		IncludedResources: []string{"routes"},
 	}, nil
 }
 

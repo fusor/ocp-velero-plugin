@@ -17,11 +17,15 @@ limitations under the License.
 package route
 
 import (
+	"fmt"
 	"github.com/heptio/velero/pkg/apis/velero/v1"
 	"github.com/heptio/velero/pkg/restore"
+	networkv1 "github.com/openshift/client-go/network/clientset/versioned/typed/network/v1"
 	"github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/api/meta"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/rest"
 )
 
 // MyRestorePlugin is a restore item action plugin for Velero
@@ -31,7 +35,9 @@ type RestorePlugin struct {
 
 // AppliesTo returns a restore.ResourceSelector that applies to everything
 func (p *RestorePlugin) AppliesTo() (restore.ResourceSelector, error) {
-	return restore.ResourceSelector{}, nil
+	return restore.ResourceSelector{
+		IncludedResources: []string{"routes"},
+	}, nil
 }
 
 func (p *RestorePlugin) Execute(item runtime.Unstructured, restore *v1.Restore) (runtime.Unstructured, error, error) {
@@ -51,5 +57,32 @@ func (p *RestorePlugin) Execute(item runtime.Unstructured, restore *v1.Restore) 
 
 	metadata.SetAnnotations(annotations)
 
+	client, err := p.networkClient()
+	if err != nil {
+		return nil, nil, err
+	}
+	subnets, err := client.HostSubnets().List(metav1.ListOptions{})
+	if err != nil {
+		return nil, nil, err
+	}
+	clusternetworks, err := client.ClusterNetworks().List(metav1.ListOptions{})
+	if err != nil {
+		return nil, nil, err
+	}
+	p.Log.Info(fmt.Sprintf("subnet: %#v", subnets))
+	p.Log.Info(fmt.Sprintf("clusterNetworks: %#v", clusternetworks))
+
 	return item, nil, nil
+}
+
+func (p *RestorePlugin) networkClient() (*networkv1.NetworkV1Client, error) {
+	config, err := rest.InClusterConfig()
+	if err != nil {
+		return nil, err
+	}
+	client, err := networkv1.NewForConfig(config)
+	if err != nil {
+		return nil, err
+	}
+	return client, nil
 }

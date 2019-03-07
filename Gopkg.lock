@@ -342,23 +342,29 @@
   version = "1.0.1"
 
 [[projects]]
-  digest = "1:499a35c3c4b709b45574715f89d84b526ce28a24e77d2947048c99c4419ffba1"
+  digest = "1:189279249495ffd15d2e9efee135889b2c664996b5abbbdca09132127bb1c7e3"
   name = "github.com/openshift/api"
   packages = [
+    "build/v1",
     "image/docker10",
     "image/dockerpre012",
     "image/v1",
+    "route/v1",
   ]
   pruneopts = "NUT"
   revision = "0d921e363e951d89f583292c60d013c318df64dc"
   version = "v3.9.0"
 
 [[projects]]
-  digest = "1:03f24e42f27df09290d7f97ea22cd57386f81cbffc0139d427a4bc5aacdc367e"
+  digest = "1:f21af66247f14806f95a09b9fcc19aff5f1f17bd97bb39567018ddf39d60c980"
   name = "github.com/openshift/client-go"
   packages = [
+    "build/clientset/versioned/scheme",
+    "build/clientset/versioned/typed/build/v1",
     "image/clientset/versioned/scheme",
     "image/clientset/versioned/typed/image/v1",
+    "route/clientset/versioned/scheme",
+    "route/clientset/versioned/typed/route/v1",
   ]
   pruneopts = "NUT"
   revision = "1fa528d3be060e4c7178eb69e76d37cf7e699e3c"
@@ -744,13 +750,13 @@
   input-imports = [
     "github.com/heptio/velero/pkg/apis/velero/v1",
     "github.com/heptio/velero/pkg/backup",
-    "github.com/heptio/velero/pkg/cloudprovider",
     "github.com/heptio/velero/pkg/plugin",
     "github.com/heptio/velero/pkg/restore",
-    "github.com/heptio/velero/pkg/util/collections",
     "github.com/mitchellh/mapstructure",
     "github.com/openshift/api/image/v1",
+    "github.com/openshift/client-go/build/clientset/versioned/typed/build/v1",
     "github.com/openshift/client-go/image/clientset/versioned/typed/image/v1",
+    "github.com/openshift/client-go/route/clientset/versioned/typed/route/v1",
     "github.com/sirupsen/logrus",
     "k8s.io/apimachinery/pkg/api/meta",
     "k8s.io/apimachinery/pkg/apis/meta/v1",

@@ -17,7 +17,9 @@ limitations under the License.
 package main
 
 import (
+	"github.com/fusor/ocp-velero-plugin/velero-plugins/buildconfig"
 	"github.com/fusor/ocp-velero-plugin/velero-plugins/imagestream"
+	"github.com/fusor/ocp-velero-plugin/velero-plugins/route"
 	veleroplugin "github.com/heptio/velero/pkg/plugin"
 	"github.com/sirupsen/logrus"
 )
@@ -35,4 +37,20 @@ func newImageStreamBackupPlugin(logger logrus.FieldLogger) (interface{}, error) 
 
 func newImageStreamRestorePlugin(logger logrus.FieldLogger) (interface{}, error) {
 	return &imagestream.RestorePlugin{Log: logger}, nil
+}
+
+func newBuildConfigBackupPlugin(logger logrus.FieldLogger) (interface{}, error) {
+	return &buildconfig.BackupPlugin{Log: logger}, nil
+}
+
+func newBuildConfigRestorePlugin(logger logrus.FieldLogger) (interface{}, error) {
+	return &buildconfig.RestorePlugin{Log: logger}, nil
+}
+
+func newRouteBackupPlugin(logger logrus.FieldLogger) (interface{}, error) {
+	return &route.BackupPlugin{Log: logger}, nil
+}
+
+func newRouteRestorePlugin(logger logrus.FieldLogger) (interface{}, error) {
+	return &route.RestorePlugin{Log: logger}, nil
 }

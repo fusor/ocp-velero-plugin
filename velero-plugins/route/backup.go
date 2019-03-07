@@ -14,13 +14,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package buildconfig
+package route
 
 import (
 	"github.com/sirupsen/logrus"
 
-	//buildv1API "github.com/openshift/api/build/v1"
-	buildv1 "github.com/openshift/client-go/build/clientset/versioned/typed/build/v1"
+	//routev1API "github.com/openshift/api/build/v1"
+	routev1 "github.com/openshift/client-go/route/clientset/versioned/typed/route/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	//metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -44,7 +44,7 @@ func (p *BackupPlugin) AppliesTo() (backup.ResourceSelector, error) {
 
 // Execute sets a custom annotation on the item being backed up.
 func (p *BackupPlugin) Execute(item runtime.Unstructured, backup *v1.Backup) (runtime.Unstructured, []backup.ResourceIdentifier, error) {
-	p.Log.Info("Hello from Build Config backup plugin!")
+	p.Log.Info("Hello from Route backup plugin!")
 
 	metadata, err := meta.Accessor(item)
 	if err != nil {
@@ -56,9 +56,9 @@ func (p *BackupPlugin) Execute(item runtime.Unstructured, backup *v1.Backup) (ru
 		annotations = make(map[string]string)
 	}
 
-	annotations["openshift.io/buildconfig-plugin"] = "1"
+	annotations["openshift.io/route-plugin"] = "1"
 
-	/*client, err := p.buildClient()
+	/*client, err := p.routeClient()
 	if err != nil {
 		return nil, nil, err
 	}*/
@@ -67,12 +67,12 @@ func (p *BackupPlugin) Execute(item runtime.Unstructured, backup *v1.Backup) (ru
 	return item, nil, nil
 }
 
-func (p *BackupPlugin) buildClient() (*buildv1.BuildV1Client, error) {
+func (p *BackupPlugin) routeClient() (*routev1.RouteV1Client, error) {
 	config, err := rest.InClusterConfig()
 	if err != nil {
 		return nil, err
 	}
-	client, err := buildv1.NewForConfig(config)
+	client, err := routev1.NewForConfig(config)
 	if err != nil {
 		return nil, err
 	}

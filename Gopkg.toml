@@ -27,8 +27,8 @@
   go-tests = true
 
 [[constraint]]
+  name = "github.com/openshift/client-go"
   branch = "master"
-  name = "github.com/hashicorp/go-plugin"
 
 [[constraint]]
   name = "github.com/heptio/velero"

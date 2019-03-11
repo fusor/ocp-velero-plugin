@@ -31,7 +31,9 @@ type RestorePlugin struct {
 
 // AppliesTo returns a restore.ResourceSelector that applies to everything
 func (p *RestorePlugin) AppliesTo() (restore.ResourceSelector, error) {
-	return restore.ResourceSelector{}, nil
+	return restore.ResourceSelector{
+		IncludedResources: []string{"imagestreams"},
+	}, nil
 }
 
 func (p *RestorePlugin) Execute(item runtime.Unstructured, restore *v1.Restore) (runtime.Unstructured, error, error) {

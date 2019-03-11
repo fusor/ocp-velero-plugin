@@ -18,10 +18,8 @@ package route
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/heptio/velero/pkg/apis/velero/v1"
 	"github.com/heptio/velero/pkg/restore"
-	"github.com/mitchellh/mapstructure"
 	routev1API "github.com/openshift/api/route/v1"
 	"github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -59,6 +57,9 @@ func (p *RestorePlugin) AppliesTo() (restore.ResourceSelector, error) {
 
 func (p *RestorePlugin) Execute(item runtime.Unstructured, restore *v1.Restore) (runtime.Unstructured, error, error) {
 	p.Log.Info("Hello from Route RestorePlugin!")
+	route := routev1API.Route{}
+	itemMarshal, _ := json.Marshal(item)
+	json.Unmarshal(itemMarshal, &route)
 
 	metadata, err := meta.Accessor(item)
 	if err != nil {
@@ -76,38 +77,29 @@ func (p *RestorePlugin) Execute(item runtime.Unstructured, restore *v1.Restore) 
 
 	client, err := p.coreClient()
 	if err != nil {
-		p.Log.Info(fmt.Sprintf("ERROR: %v", err))
 		return nil, nil, err
 	}
 	config, err := client.ConfigMaps("openshift-apiserver").Get("config", metav1.GetOptions{})
 	if err != nil {
-		p.Log.Info(fmt.Sprintf("ERROR: %v", err))
 		return nil, nil, err
 	}
 	serverConfig := ApiServerConfig{}
 	err = json.Unmarshal([]byte(config.Data["config.yaml"]), &serverConfig)
 	if err != nil {
-		p.Log.Info(fmt.Sprintf("ERROR: %v", err))
 		return nil, nil, err
 	}
 
 	subdomain := serverConfig.RoutingConfig.Subdomain
 
-	route := routev1API.Route{}
-	obj := item.UnstructuredContent()
-	mapstructure.Decode(obj, &route)
-
 	host := route.Spec.Host
 	name := strings.Split(host, ".")[0]
 	newHost := name + "." + subdomain
 	route.Spec.Host = newHost
+
 	var out map[string]interface{}
 	objrec, _ := json.Marshal(route)
 	json.Unmarshal(objrec, &out)
-
 	item.SetUnstructuredContent(out)
-	p.Log.Info(fmt.Sprintf("New route: %v", newHost))
-	p.Log.Info(fmt.Sprintf("item: %#v", item))
 
 	return item, nil, nil
 }

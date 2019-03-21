@@ -17,6 +17,7 @@ limitations under the License.
 package main
 
 import (
+	"github.com/fusor/ocp-velero-plugin/velero-plugins/build"
 	"github.com/fusor/ocp-velero-plugin/velero-plugins/buildconfig"
 	"github.com/fusor/ocp-velero-plugin/velero-plugins/imagestream"
 	"github.com/fusor/ocp-velero-plugin/velero-plugins/route"
@@ -30,6 +31,7 @@ func main() {
 		RegisterRestoreItemAction("is-restore-plugin", newImageStreamRestorePlugin).
 		RegisterBackupItemAction("route-backup-plugin", newRouteBackupPlugin).
 		RegisterRestoreItemAction("route-restore-plugin", newRouteRestorePlugin).
+		RegisterRestoreItemAction("build-restore-plugin", newBuildRestorePlugin).
 		Serve()
 }
 
@@ -47,6 +49,10 @@ func newBuildConfigBackupPlugin(logger logrus.FieldLogger) (interface{}, error) 
 
 func newBuildConfigRestorePlugin(logger logrus.FieldLogger) (interface{}, error) {
 	return &buildconfig.RestorePlugin{Log: logger}, nil
+}
+
+func newBuildRestorePlugin(logger logrus.FieldLogger) (interface{}, error) {
+	return &build.RestorePlugin{Log: logger}, nil
 }
 
 func newRouteBackupPlugin(logger logrus.FieldLogger) (interface{}, error) {

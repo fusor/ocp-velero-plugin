@@ -16,11 +16,13 @@ BINS = $(wildcard velero-*)
 
 REPO ?= github.com/fusor/ocp-velero-plugin
 
-BUILD_IMAGE ?= gcr.io/heptio-images/golang:1.9-alpine3.6
+BUILD_IMAGE ?= openshift/origin-release:golang-1.11
 
 IMAGE ?= docker.io/fusor/ocp-velero-plugin
 
 ARCH ?= amd64
+
+BUILDTAGS ?= containers_image_ostree_stub exclude_graphdriver_devicemapper exclude_graphdriver_btrfs containers_image_openpgp exclude_graphdriver_overlay
 
 all: $(addprefix build-, $(BINS))
 
@@ -31,18 +33,22 @@ build: _output/$(BIN)
 
 _output/$(BIN): $(BIN)/*.go
 	mkdir -p .go/src/$(REPO) .go/pkg .go/std/$(ARCH) _output
+	cp -rp * .go/src/$(REPO)
+# The patch and mv below is needed until https://github.com/containers/storage/pull/309 is merged and vendor/ is updated with the fix
+	patch  -p0 -d .go/src/$(REPO) < copy_cgo.patch
+	mv .go/src/$(REPO)/vendor/github.com/containers/storage/drivers/copy/copy.go .go/src/$(REPO)/vendor/github.com/containers/storage/drivers/copy/copy_linux.go
 	docker run \
 				 --rm \
 				 -u $$(id -u):$$(id -g) \
 				 -v $$(pwd)/.go/pkg:/go/pkg \
 				 -v $$(pwd)/.go/src:/go/src \
 				 -v $$(pwd)/.go/std:/go/std \
-				 -v $$(pwd):/go/src/$(REPO) \
+				 -v $$(pwd)/_output:/go/src/$(REPO)/_output \
 				 -v $$(pwd)/.go/std/$(ARCH):/usr/local/go/pkg/linux_$(ARCH)_static \
 				 -e CGO_ENABLED=0 \
 				 -w /go/src/$(REPO) \
 				 $(BUILD_IMAGE) \
-				 go build -installsuffix "static" -i -v -o _output/$(BIN) ./$(BIN)
+				 go build -installsuffix "static"  -tags "$(BUILDTAGS)" -i -v -o _output/$(BIN) ./$(BIN)
 
 container: all
 	cp Dockerfile _output/Dockerfile

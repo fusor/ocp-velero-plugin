@@ -24,7 +24,6 @@ import (
 	buildv1API "github.com/openshift/api/build/v1"
 	"github.com/sirupsen/logrus"
 	corev1API "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"

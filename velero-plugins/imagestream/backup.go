@@ -17,6 +17,7 @@ limitations under the License.
 package imagestream
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -31,6 +32,10 @@ import (
 	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/rest"
 
+	"github.com/containers/image/copy"
+	"github.com/containers/image/signature"
+	"github.com/containers/image/transports/alltransports"
+	"github.com/containers/image/types"
 	v1 "github.com/heptio/velero/pkg/apis/velero/v1"
 	"github.com/heptio/velero/pkg/backup"
 )
@@ -114,9 +119,13 @@ func (p *BackupPlugin) Execute(item runtime.Unstructured, backup *v1.Backup) (ru
 					localImageCopiedByTag = true
 					destTag = ":" + tag.Tag
 				}
-				// This is where the actual image copy will go once skopeo code is vendored
-				// into plugin.
-				p.Log.Info(fmt.Sprintf("skopeo copy --src-creds=<how to get oc user:token?> --src-tls-verify=false --dest-tls-verify=false docker://%s docker://%s/%s/%s%s", dockerImageReference, migrationRegistry, im.Namespace, im.Name, destTag))
+				manifest, err := copyImage(p, fmt.Sprintf("docker://%s", dockerImageReference), fmt.Sprintf("docker://%s/%s/%s%s", migrationRegistry, im.Namespace, im.Name, destTag))
+				if err != nil {
+					return nil, nil, err
+				}
+				p.Log.Info(fmt.Sprintf("manifest of copied image: %s", manifest))
+				p.Log.Info(fmt.Sprintf("copied from: docker://%s", dockerImageReference))
+				p.Log.Info(fmt.Sprintf("copied to: docker://%s/%s/%s%s", migrationRegistry, im.Namespace, im.Name, destTag))
 			}
 		}
 	}
@@ -205,4 +214,67 @@ func (p *BackupPlugin) coreClient() (*corev1.CoreV1Client, error) {
 		return nil, err
 	}
 	return client, nil
+}
+
+func copyImage(p *BackupPlugin, src, dest string) (string, error) {
+	policyContext, err := getPolicyContext()
+	if err != nil {
+		return "", fmt.Errorf("Error loading trust policy: %v", err)
+	}
+	defer policyContext.Destroy()
+
+	srcRef, err := alltransports.ParseImageName(src)
+	if err != nil {
+		return "", fmt.Errorf("Invalid source name %s: %v", src, err)
+	}
+	destRef, err := alltransports.ParseImageName(dest)
+	if err != nil {
+		return "", fmt.Errorf("Invalid destination name %s: %v", dest, err)
+	}
+	sourceCtx, err := internalRegistrySystemContext()
+	if err != nil {
+		return "", err
+	}
+	destinationCtx, err := migrationRegistrySystemContext()
+	if err != nil {
+		return "", err
+	}
+
+	manifest, err := copy.Image(context.Background(), policyContext, destRef, srcRef, &copy.Options{
+		SourceCtx:             sourceCtx,
+		DestinationCtx:        destinationCtx,
+	})
+	return string(manifest), err
+}
+
+
+// getPolicyContext returns a *signature.PolicyContext based on opts.
+func getPolicyContext() (*signature.PolicyContext, error) {
+	policy := &signature.Policy{Default: []signature.PolicyRequirement{signature.NewPRInsecureAcceptAnything()}}
+	return signature.NewPolicyContext(policy)
+}
+
+func internalRegistrySystemContext() (*types.SystemContext, error) {
+	config, err := rest.InClusterConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := &types.SystemContext{
+		DockerDaemonInsecureSkipTLSVerify: true,
+		DockerInsecureSkipTLSVerify: types.OptionalBoolTrue,
+		DockerAuthConfig: &types.DockerAuthConfig{
+			Username: "ignored",
+			Password: config.BearerToken,
+		},
+	}
+	return ctx, nil
+}
+
+func migrationRegistrySystemContext() (*types.SystemContext, error) {
+	ctx := &types.SystemContext{
+		DockerDaemonInsecureSkipTLSVerify: true,
+		DockerInsecureSkipTLSVerify: types.OptionalBoolTrue,
+	}
+	return ctx, nil
 }

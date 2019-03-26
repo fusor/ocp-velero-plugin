@@ -62,3 +62,11 @@
 [[override]]
   name = "github.com/Azure/azure-sdk-for-go"
   version = "~11.3.0-beta"
+
+[[override]]
+  name = "github.com/docker/docker"
+  revision = "da99009bbb1165d1ac5688b5c81d2f589d418341"
+
+[[override]]
+  name = "github.com/golang/protobuf"
+  branch = "master"

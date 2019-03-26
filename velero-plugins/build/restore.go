@@ -47,18 +47,6 @@ func (p *RestorePlugin) AppliesTo() (restore.ResourceSelector, error) {
 func (p *RestorePlugin) Execute(item runtime.Unstructured, restore *v1.Restore) (runtime.Unstructured, error, error) {
 	p.Log.Info("Hello from Build RestorePlugin!")
 
-	metadata, err := meta.Accessor(item)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	annotations := metadata.GetAnnotations()
-	if annotations == nil {
-		annotations = make(map[string]string)
-	}
-
-	annotations["openshift.io/buildconfig-restore-plugin"] = "1"
-
 	build := buildv1API.Build{}
 	itemMarshal, _ := json.Marshal(item)
 	json.Unmarshal(itemMarshal, &build)
@@ -79,8 +67,6 @@ func (p *RestorePlugin) Execute(item runtime.Unstructured, restore *v1.Restore) 
 	objrec, _ := json.Marshal(build)
 	json.Unmarshal(objrec, &out)
 	item.SetUnstructuredContent(out)
-
-	metadata.SetAnnotations(annotations)
 
 	return item, nil, nil
 }

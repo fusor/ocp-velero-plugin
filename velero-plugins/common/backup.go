@@ -3,6 +3,7 @@ package common
 import (
 	"fmt"
 	"github.com/sirupsen/logrus"
+	"strings"
 
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -44,6 +45,9 @@ func (p *BackupPlugin) Execute(item runtime.Unstructured, backup *v1.Backup) (ru
 	version, err := client.ServerVersion()
 	if err != nil {
 		return nil, nil, err
+	}
+	if strings.HasSuffix(version.Minor, "+") {
+		version.Minor = strings.TrimSuffix(version.Minor, "+")
 	}
 
 	annotations["openshift.io/backup-server-version"] = fmt.Sprintf("%v.%v", version.Major, version.Minor)

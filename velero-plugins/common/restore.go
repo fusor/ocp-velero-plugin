@@ -3,6 +3,7 @@ package common
 import (
 	"fmt"
 	"github.com/sirupsen/logrus"
+	"strings"
 
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -44,6 +45,9 @@ func (p *RestorePlugin) Execute(item runtime.Unstructured, restore *v1.Restore) 
 	version, err := client.ServerVersion()
 	if err != nil {
 		return nil, nil, err
+	}
+	if strings.HasSuffix(version.Minor, "+") {
+		version.Minor = strings.TrimSuffix(version.Minor, "+")
 	}
 
 	annotations["openshift.io/restore-server-version"] = fmt.Sprintf("%v.%v", version.Major, version.Minor)

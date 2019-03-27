@@ -1,26 +1,17 @@
 package imagestream
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"strconv"
 	"strings"
 
 	"github.com/sirupsen/logrus"
 
 	imagev1API "github.com/openshift/api/image/v1"
-	imagev1 "github.com/openshift/client-go/image/clientset/versioned/typed/image/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
-	"k8s.io/client-go/rest"
 
-	"github.com/containers/image/copy"
-	"github.com/containers/image/signature"
-	"github.com/containers/image/transports/alltransports"
-	"github.com/containers/image/types"
+	"github.com/fusor/ocp-velero-plugin/velero-plugins/common"
 	v1 "github.com/heptio/velero/pkg/apis/velero/v1"
 	"github.com/heptio/velero/pkg/backup"
 )
@@ -28,14 +19,6 @@ import (
 // BackupPlugin is a backup item action plugin for Heptio Ark.
 type BackupPlugin struct {
 	Log logrus.FieldLogger
-}
-
-type imagePolicyConfig struct {
-	InternalRegistryHostname string `json:"internalRegistryHostname"`
-}
-
-type apiServerConfig struct {
-	ImagePolicyConfig imagePolicyConfig `json:"imagePolicyConfig"`
 }
 
 // AppliesTo returns a backup.ResourceSelector that applies to everything.
@@ -60,11 +43,11 @@ func (p *BackupPlugin) Execute(item runtime.Unstructured, backup *v1.Backup) (ru
 
 	annotations["openshift.io/imagestream-plugin"] = "1"
 
-	internalRegistry, err := getRegistryInfo(p, backup.Annotations["openshift.io/backup-ocp-version"])
-	if err != nil {
-		return nil, nil, err
+	internalRegistry := annotations[common.BackupRegistryHostname]
+	if len(internalRegistry) == 0 {
+		return nil, nil, errors.New("migration registry not found for annotation \"openshift.io/backup-registry-hostname\"")
 	}
-	migrationRegistry := backup.Annotations["openshift.io/migration-registry"]
+	migrationRegistry := backup.Annotations[common.MigrationRegistry]
 	if len(migrationRegistry) == 0 {
 		return nil, nil, errors.New("migration registry not found for annotation \"openshift.io/migration\"")
 	}
@@ -104,7 +87,7 @@ func (p *BackupPlugin) Execute(item runtime.Unstructured, backup *v1.Backup) (ru
 					localImageCopiedByTag = true
 					destTag = ":" + tag.Tag
 				}
-				manifest, err := copyImage(p, fmt.Sprintf("docker://%s", dockerImageReference), fmt.Sprintf("docker://%s/%s/%s%s", migrationRegistry, im.Namespace, im.Name, destTag))
+				manifest, err := copyImageBackup(fmt.Sprintf("docker://%s", dockerImageReference), fmt.Sprintf("docker://%s/%s/%s%s", migrationRegistry, im.Namespace, im.Name, destTag))
 				if err != nil {
 					return nil, nil, err
 				}
@@ -145,77 +128,7 @@ func findStatusTag(tags []imagev1API.NamedTagEventList, name string) *imagev1API
 	return nil
 }
 
-func getRegistryInfo(p *BackupPlugin, ocpVersion string) (string, error) {
-	cClient, err := p.coreClient()
-	if err != nil {
-		return "", err
-	}
-	if strings.HasPrefix(ocpVersion, "3.") {
-		registrySvc, err := cClient.Services("default").Get("docker-registry", metav1.GetOptions{})
-		if err != nil {
-			return "", err
-		}
-		internalRegistry := registrySvc.Spec.ClusterIP + ":" + strconv.Itoa(int(registrySvc.Spec.Ports[0].Port))
-		return internalRegistry, nil
-	} else if strings.HasPrefix(ocpVersion, "4.") {
-		config, err := cClient.ConfigMaps("openshift-apiserver").Get("config", metav1.GetOptions{})
-		if err != nil {
-			return "", err
-		}
-		serverConfig := apiServerConfig{}
-		err = json.Unmarshal([]byte(config.Data["config.yaml"]), &serverConfig)
-		if err != nil {
-			return "", err
-		}
-		internalRegistry := serverConfig.ImagePolicyConfig.InternalRegistryHostname
-		if len(internalRegistry) == 0 {
-			return "", errors.New("InternalRegistryHostname not found")
-		}
-		return internalRegistry, nil
-	} else {
-		return "", fmt.Errorf("OCP version %q not supported. Must be 3.x/4.x", ocpVersion)
-	}
-}
-
-func (p *BackupPlugin) imageClient() (*imagev1.ImageV1Client, error) {
-	config, err := rest.InClusterConfig()
-	if err != nil {
-		return nil, err
-	}
-	client, err := imagev1.NewForConfig(config)
-	if err != nil {
-		return nil, err
-	}
-	return client, nil
-}
-
-func (p *BackupPlugin) coreClient() (*corev1.CoreV1Client, error) {
-	config, err := rest.InClusterConfig()
-	if err != nil {
-		return nil, err
-	}
-	client, err := corev1.NewForConfig(config)
-	if err != nil {
-		return nil, err
-	}
-	return client, nil
-}
-
-func copyImage(p *BackupPlugin, src, dest string) (string, error) {
-	policyContext, err := getPolicyContext()
-	if err != nil {
-		return "", fmt.Errorf("Error loading trust policy: %v", err)
-	}
-	defer policyContext.Destroy()
-
-	srcRef, err := alltransports.ParseImageName(src)
-	if err != nil {
-		return "", fmt.Errorf("Invalid source name %s: %v", src, err)
-	}
-	destRef, err := alltransports.ParseImageName(dest)
-	if err != nil {
-		return "", fmt.Errorf("Invalid destination name %s: %v", dest, err)
-	}
+func copyImageBackup(src, dest string) (string, error) {
 	sourceCtx, err := internalRegistrySystemContext()
 	if err != nil {
 		return "", err
@@ -224,41 +137,5 @@ func copyImage(p *BackupPlugin, src, dest string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-
-	manifest, err := copy.Image(context.Background(), policyContext, destRef, srcRef, &copy.Options{
-		SourceCtx:      sourceCtx,
-		DestinationCtx: destinationCtx,
-	})
-	return string(manifest), err
-}
-
-// getPolicyContext returns a *signature.PolicyContext based on opts.
-func getPolicyContext() (*signature.PolicyContext, error) {
-	policy := &signature.Policy{Default: []signature.PolicyRequirement{signature.NewPRInsecureAcceptAnything()}}
-	return signature.NewPolicyContext(policy)
-}
-
-func internalRegistrySystemContext() (*types.SystemContext, error) {
-	config, err := rest.InClusterConfig()
-	if err != nil {
-		return nil, err
-	}
-
-	ctx := &types.SystemContext{
-		DockerDaemonInsecureSkipTLSVerify: true,
-		DockerInsecureSkipTLSVerify:       types.OptionalBoolTrue,
-		DockerAuthConfig: &types.DockerAuthConfig{
-			Username: "ignored",
-			Password: config.BearerToken,
-		},
-	}
-	return ctx, nil
-}
-
-func migrationRegistrySystemContext() (*types.SystemContext, error) {
-	ctx := &types.SystemContext{
-		DockerDaemonInsecureSkipTLSVerify: true,
-		DockerInsecureSkipTLSVerify:       types.OptionalBoolTrue,
-	}
-	return ctx, nil
+	return copyImage(src, dest, sourceCtx, destinationCtx)
 }

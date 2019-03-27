@@ -5,18 +5,17 @@ import (
 	"fmt"
 	"strings"
 
-	v1 "github.com/heptio/velero/pkg/apis/velero/v1"
+	"github.com/fusor/ocp-velero-plugin/velero-plugins/clients"
+	v1 "github.com/heptio/velero/pkg/apis/ark/v1"
 	"github.com/heptio/velero/pkg/restore"
 	buildv1API "github.com/openshift/api/build/v1"
 	"github.com/sirupsen/logrus"
 	corev1API "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
-	"k8s.io/client-go/rest"
 )
 
-// MyRestorePlugin is a restore item action plugin for Velero
+// RestorePlugin is a restore item action plugin for Velero
 type RestorePlugin struct {
 	Log logrus.FieldLogger
 }
@@ -28,6 +27,7 @@ func (p *RestorePlugin) AppliesTo() (restore.ResourceSelector, error) {
 	}, nil
 }
 
+// Execute action for the restore plugin for the build resource
 func (p *RestorePlugin) Execute(item runtime.Unstructured, restore *v1.Restore) (runtime.Unstructured, error, error) {
 	p.Log.Info("Hello from Build RestorePlugin!")
 
@@ -55,20 +55,8 @@ func (p *RestorePlugin) Execute(item runtime.Unstructured, restore *v1.Restore) 
 	return item, nil, nil
 }
 
-func (p *RestorePlugin) coreClient() (*corev1.CoreV1Client, error) {
-	config, err := rest.InClusterConfig()
-	if err != nil {
-		return nil, err
-	}
-	client, err := corev1.NewForConfig(config)
-	if err != nil {
-		return nil, err
-	}
-	return client, nil
-}
-
 func (p *RestorePlugin) findBuilderDockercfgSecret(namespace string) string {
-	client, err := p.coreClient()
+	client, err := clients.NewCoreClient()
 	if err != nil {
 		return ""
 	}

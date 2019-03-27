@@ -4,15 +4,13 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/sirupsen/logrus"
-
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/client-go/discovery"
-	"k8s.io/client-go/rest"
 
+	"github.com/fusor/ocp-velero-plugin/velero-plugins/clients"
 	v1 "github.com/heptio/velero/pkg/apis/velero/v1"
 	"github.com/heptio/velero/pkg/backup"
+	"github.com/sirupsen/logrus"
 )
 
 // BackupPlugin is a backup item action plugin for Heptio Ark.
@@ -39,7 +37,7 @@ func (p *BackupPlugin) Execute(item runtime.Unstructured, backup *v1.Backup) (ru
 		annotations = make(map[string]string)
 	}
 
-	client, err := p.discoveryClient()
+	client, err := clients.NewDiscoveryClient()
 	if err != nil {
 		return nil, nil, err
 	}
@@ -51,21 +49,13 @@ func (p *BackupPlugin) Execute(item runtime.Unstructured, backup *v1.Backup) (ru
 		version.Minor = strings.TrimSuffix(version.Minor, "+")
 	}
 
-	annotations["openshift.io/backup-server-version"] = fmt.Sprintf("%v.%v", version.Major, version.Minor)
-
+	annotations[BackupServerVersion] = fmt.Sprintf("%v.%v", version.Major, version.Minor)
+	registryHostname, err := getRegistryInfo(version.Major, version.Minor)
+	if err != nil {
+		return nil, nil, err
+	}
+	annotations[BackupRegistryHostname] = registryHostname
 	metadata.SetAnnotations(annotations)
 
 	return item, nil, nil
-}
-
-func (p *BackupPlugin) discoveryClient() (*discovery.DiscoveryClient, error) {
-	config, err := rest.InClusterConfig()
-	if err != nil {
-		return nil, err
-	}
-	client, err := discovery.NewDiscoveryClientForConfig(config)
-	if err != nil {
-		return nil, err
-	}
-	return client, nil
 }

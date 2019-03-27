@@ -1,19 +1,3 @@
-/*
-Copyright 2017 the Heptio Ark contributors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-
 package imagestream
 
 import (
@@ -21,9 +5,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/sirupsen/logrus"
 	"strconv"
 	"strings"
+
+	"github.com/sirupsen/logrus"
 
 	imagev1API "github.com/openshift/api/image/v1"
 	imagev1 "github.com/openshift/client-go/image/clientset/versioned/typed/image/v1"
@@ -241,12 +226,11 @@ func copyImage(p *BackupPlugin, src, dest string) (string, error) {
 	}
 
 	manifest, err := copy.Image(context.Background(), policyContext, destRef, srcRef, &copy.Options{
-		SourceCtx:             sourceCtx,
-		DestinationCtx:        destinationCtx,
+		SourceCtx:      sourceCtx,
+		DestinationCtx: destinationCtx,
 	})
 	return string(manifest), err
 }
-
 
 // getPolicyContext returns a *signature.PolicyContext based on opts.
 func getPolicyContext() (*signature.PolicyContext, error) {
@@ -262,7 +246,7 @@ func internalRegistrySystemContext() (*types.SystemContext, error) {
 
 	ctx := &types.SystemContext{
 		DockerDaemonInsecureSkipTLSVerify: true,
-		DockerInsecureSkipTLSVerify: types.OptionalBoolTrue,
+		DockerInsecureSkipTLSVerify:       types.OptionalBoolTrue,
 		DockerAuthConfig: &types.DockerAuthConfig{
 			Username: "ignored",
 			Password: config.BearerToken,
@@ -274,7 +258,7 @@ func internalRegistrySystemContext() (*types.SystemContext, error) {
 func migrationRegistrySystemContext() (*types.SystemContext, error) {
 	ctx := &types.SystemContext{
 		DockerDaemonInsecureSkipTLSVerify: true,
-		DockerInsecureSkipTLSVerify: types.OptionalBoolTrue,
+		DockerInsecureSkipTLSVerify:       types.OptionalBoolTrue,
 	}
 	return ctx, nil
 }

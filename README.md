@@ -33,4 +33,4 @@ $ make container IMAGE=your-repo/your-name:here
 To deploy your plugin image to an Velero server:
 
 1. Make sure your image is pushed to a registry that is accessible to your cluster's nodes.
-2. Run `velero plugin add <image>`, e.g. `velero plugin add docker.io/fusor/ocp-velero-plugin`
+2. Run `velero plugin add <image>`, e.g. `velero plugin add quay.io/ocpmigrate/velero-plugin`

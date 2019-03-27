@@ -4,31 +4,18 @@ import (
 	"encoding/json"
 	"strings"
 
-	v1 "github.com/heptio/velero/pkg/apis/velero/v1"
+	"github.com/fusor/ocp-velero-plugin/velero-plugins/clients"
+	"github.com/fusor/ocp-velero-plugin/velero-plugins/common"
+	v1 "github.com/heptio/velero/pkg/apis/ark/v1"
 	"github.com/heptio/velero/pkg/restore"
 	routev1API "github.com/openshift/api/route/v1"
 	"github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
-	"k8s.io/client-go/rest"
 )
 
-type routingConfig struct {
-	Subdomain string `json:"subdomain"`
-}
-
-type imagePolicyConfig struct {
-	InternalRegistryHostname string `json:"internalRegistryHostname"`
-}
-
-type ApiServerConfig struct {
-	ImagePolicyConfig imagePolicyConfig `json:"imagePolicyConfig"`
-	RoutingConfig     routingConfig     `json:"routingConfig"`
-}
-
-// MyRestorePlugin is a restore item action plugin for Velero
+// RestorePlugin is a restore item action plugin for Velero
 type RestorePlugin struct {
 	Log logrus.FieldLogger
 }
@@ -40,6 +27,7 @@ func (p *RestorePlugin) AppliesTo() (restore.ResourceSelector, error) {
 	}, nil
 }
 
+// Execute fixes the route path on restore to use the target cluster's domain name
 func (p *RestorePlugin) Execute(item runtime.Unstructured, restore *v1.Restore) (runtime.Unstructured, error, error) {
 	p.Log.Info("Hello from Route RestorePlugin!")
 	route := routev1API.Route{}
@@ -60,7 +48,7 @@ func (p *RestorePlugin) Execute(item runtime.Unstructured, restore *v1.Restore) 
 
 	metadata.SetAnnotations(annotations)
 
-	client, err := p.coreClient()
+	client, err := clients.NewCoreClient()
 	if err != nil {
 		return nil, nil, err
 	}
@@ -68,7 +56,7 @@ func (p *RestorePlugin) Execute(item runtime.Unstructured, restore *v1.Restore) 
 	if err != nil {
 		return nil, nil, err
 	}
-	serverConfig := ApiServerConfig{}
+	serverConfig := common.APIServerConfig{}
 	err = json.Unmarshal([]byte(config.Data["config.yaml"]), &serverConfig)
 	if err != nil {
 		return nil, nil, err
@@ -87,16 +75,4 @@ func (p *RestorePlugin) Execute(item runtime.Unstructured, restore *v1.Restore) 
 	item.SetUnstructuredContent(out)
 
 	return item, nil, nil
-}
-
-func (p *RestorePlugin) coreClient() (*corev1.CoreV1Client, error) {
-	config, err := rest.InClusterConfig()
-	if err != nil {
-		return nil, err
-	}
-	client, err := corev1.NewForConfig(config)
-	if err != nil {
-		return nil, err
-	}
-	return client, nil
 }

@@ -4,12 +4,10 @@ import (
 	"github.com/sirupsen/logrus"
 
 	//buildv1API "github.com/openshift/api/build/v1"
-	buildv1 "github.com/openshift/client-go/build/clientset/versioned/typed/build/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
 
 	//metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/client-go/rest"
 
 	v1 "github.com/heptio/velero/pkg/apis/velero/v1"
 	"github.com/heptio/velero/pkg/backup"
@@ -43,23 +41,11 @@ func (p *BackupPlugin) Execute(item runtime.Unstructured, backup *v1.Backup) (ru
 
 	annotations["openshift.io/buildconfig-plugin"] = "1"
 
-	/*client, err := p.buildClient()
+	/*client, err := clients.NewBuildClient()
 	if err != nil {
 		return nil, nil, err
 	}*/
 	metadata.SetAnnotations(annotations)
 
 	return item, nil, nil
-}
-
-func (p *BackupPlugin) buildClient() (*buildv1.BuildV1Client, error) {
-	config, err := rest.InClusterConfig()
-	if err != nil {
-		return nil, err
-	}
-	client, err := buildv1.NewForConfig(config)
-	if err != nil {
-		return nil, err
-	}
-	return client, nil
 }

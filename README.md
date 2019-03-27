@@ -1,4 +1,4 @@
-# OCP Velero Plugin
+# OCP Velero Plugin [![Build Status](https://travis-ci.com/fusor/ocp-velero-plugin.svg?branch=master)](https://travis-ci.com/fusor/ocp-velero-plugin)
 
 ## Kinds of Plugins
 

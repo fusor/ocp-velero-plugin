@@ -54,14 +54,7 @@ container: all
 	cp Dockerfile _output/Dockerfile
 	docker build -t $(IMAGE) -f _output/Dockerfile _output
 
-all-ci: $(addprefix ci-, $(BINS))
-
-ci-%:
-	$(MAKE) --no-print-directory BIN=$* ci
-
-ci:
-	mkdir -p _output
-	CGO_ENABLED=0 go build -v -o _output/$(BIN) ./$(BIN)
+ci: all
 
 clean:
 	rm -rf .go _output

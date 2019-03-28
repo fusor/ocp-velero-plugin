@@ -32,7 +32,8 @@
 
 [[constraint]]
   name = "github.com/heptio/velero"
-  branch = "master"
+  branch = "fusor-dev"
+  source = "github.com/fusor/velero.git"
 
 [[constraint]]
   name = "github.com/sirupsen/logrus"
@@ -41,7 +42,7 @@
 # Match Velero dependency versions
 [[constraint]]
   name = "k8s.io/apimachinery"
-  version = "kubernetes-1.11.0"
+  version = "kubernetes-1.12.0"
 
 [[override]]
   name = "github.com/spf13/cobra"
@@ -57,11 +58,11 @@
 
 [[override]]
   name = "github.com/Azure/go-autorest"
-  revision = "1ff28809256a84bb6966640ff3d0371af82ccba4"
+  version = "~10.14.0"
 
 [[override]]
   name = "github.com/Azure/azure-sdk-for-go"
-  version = "~11.3.0-beta"
+  version = "~19.0.0"
 
 [[override]]
   name = "github.com/docker/docker"

@@ -11,7 +11,7 @@ import (
 )
 
 func main() {
-	veleroplugin.NewServer(veleroplugin.NewLogger()).
+	veleroplugin.NewServer().
 		RegisterBackupItemAction("common-backup-plugin", newCommonBackupPlugin).
 		RegisterRestoreItemAction("common-restore-plugin", newCommonRestorePlugin).
 		RegisterBackupItemAction("is-backup-plugin", newImageStreamBackupPlugin).

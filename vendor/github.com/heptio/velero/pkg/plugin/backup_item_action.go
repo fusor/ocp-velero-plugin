@@ -1,5 +1,5 @@
 /*
-Copyright 2017 the Heptio Ark contributors.
+Copyright 2017, 2019 the Velero contributors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -28,8 +28,8 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	api "github.com/heptio/velero/pkg/apis/velero/v1"
-	velerobackup "github.com/heptio/velero/pkg/backup"
 	proto "github.com/heptio/velero/pkg/plugin/generated"
+	"github.com/heptio/velero/pkg/plugin/velero"
 )
 
 // BackupItemActionPlugin is an implementation of go-plugin's Plugin
@@ -70,13 +70,13 @@ func newBackupItemActionGRPCClient(base *clientBase, clientConn *grpc.ClientConn
 	}
 }
 
-func (c *BackupItemActionGRPCClient) AppliesTo() (velerobackup.ResourceSelector, error) {
+func (c *BackupItemActionGRPCClient) AppliesTo() (velero.ResourceSelector, error) {
 	res, err := c.grpcClient.AppliesTo(context.Background(), &proto.AppliesToRequest{Plugin: c.plugin})
 	if err != nil {
-		return velerobackup.ResourceSelector{}, err
+		return velero.ResourceSelector{}, err
 	}
 
-	return velerobackup.ResourceSelector{
+	return velero.ResourceSelector{
 		IncludedNamespaces: res.IncludedNamespaces,
 		ExcludedNamespaces: res.ExcludedNamespaces,
 		IncludedResources:  res.IncludedResources,
@@ -85,7 +85,7 @@ func (c *BackupItemActionGRPCClient) AppliesTo() (velerobackup.ResourceSelector,
 	}, nil
 }
 
-func (c *BackupItemActionGRPCClient) Execute(item runtime.Unstructured, backup *api.Backup) (runtime.Unstructured, []velerobackup.ResourceIdentifier, error) {
+func (c *BackupItemActionGRPCClient) Execute(item runtime.Unstructured, backup *api.Backup) (runtime.Unstructured, []velero.ResourceIdentifier, error) {
 	itemJSON, err := json.Marshal(item.UnstructuredContent())
 	if err != nil {
 		return nil, nil, err
@@ -112,10 +112,10 @@ func (c *BackupItemActionGRPCClient) Execute(item runtime.Unstructured, backup *
 		return nil, nil, err
 	}
 
-	var additionalItems []velerobackup.ResourceIdentifier
+	var additionalItems []velero.ResourceIdentifier
 
 	for _, itm := range res.AdditionalItems {
-		newItem := velerobackup.ResourceIdentifier{
+		newItem := velero.ResourceIdentifier{
 			GroupResource: schema.GroupResource{
 				Group:    itm.Group,
 				Resource: itm.Resource,
@@ -146,13 +146,13 @@ type BackupItemActionGRPCServer struct {
 	mux *serverMux
 }
 
-func (s *BackupItemActionGRPCServer) getImpl(name string) (velerobackup.ItemAction, error) {
+func (s *BackupItemActionGRPCServer) getImpl(name string) (velero.BackupItemAction, error) {
 	impl, err := s.mux.getHandler(name)
 	if err != nil {
 		return nil, err
 	}
 
-	itemAction, ok := impl.(velerobackup.ItemAction)
+	itemAction, ok := impl.(velero.BackupItemAction)
 	if !ok {
 		return nil, errors.Errorf("%T is not a backup item action", impl)
 	}
@@ -160,7 +160,13 @@ func (s *BackupItemActionGRPCServer) getImpl(name string) (velerobackup.ItemActi
 	return itemAction, nil
 }
 
-func (s *BackupItemActionGRPCServer) AppliesTo(ctx context.Context, req *proto.AppliesToRequest) (*proto.AppliesToResponse, error) {
+func (s *BackupItemActionGRPCServer) AppliesTo(ctx context.Context, req *proto.AppliesToRequest) (response *proto.AppliesToResponse, err error) {
+	defer func() {
+		if recoveredErr := handlePanic(recover()); recoveredErr != nil {
+			err = recoveredErr
+		}
+	}()
+
 	impl, err := s.getImpl(req.Plugin)
 	if err != nil {
 		return nil, err
@@ -180,7 +186,13 @@ func (s *BackupItemActionGRPCServer) AppliesTo(ctx context.Context, req *proto.A
 	}, nil
 }
 
-func (s *BackupItemActionGRPCServer) Execute(ctx context.Context, req *proto.ExecuteRequest) (*proto.ExecuteResponse, error) {
+func (s *BackupItemActionGRPCServer) Execute(ctx context.Context, req *proto.ExecuteRequest) (response *proto.ExecuteResponse, err error) {
+	defer func() {
+		if recoveredErr := handlePanic(recover()); recoveredErr != nil {
+			err = recoveredErr
+		}
+	}()
+
 	impl, err := s.getImpl(req.Plugin)
 	if err != nil {
 		return nil, err
@@ -224,7 +236,7 @@ func (s *BackupItemActionGRPCServer) Execute(ctx context.Context, req *proto.Exe
 	return res, nil
 }
 
-func backupResourceIdentifierToProto(id velerobackup.ResourceIdentifier) *proto.ResourceIdentifier {
+func backupResourceIdentifierToProto(id velero.ResourceIdentifier) *proto.ResourceIdentifier {
 	return &proto.ResourceIdentifier{
 		Group:     id.Group,
 		Resource:  id.Resource,

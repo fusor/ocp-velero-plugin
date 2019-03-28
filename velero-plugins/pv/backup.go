@@ -7,6 +7,7 @@ import (
 	"github.com/fusor/ocp-velero-plugin/velero-plugins/common"
 	v1 "github.com/heptio/velero/pkg/apis/velero/v1"
 	"github.com/heptio/velero/pkg/backup"
+	"github.com/heptio/velero/pkg/plugin/velero"
 	"github.com/sirupsen/logrus"
 	corev1API "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -19,7 +20,7 @@ type BackupPlugin struct {
 }
 
 // AppliesTo returns a backup.ResourceSelector that applies to everything.
-func (p *BackupPlugin) AppliesTo() (backup.ResourceSelector, error) {
+func (p *BackupPlugin) AppliesTo() (velero.ResourceSelector, error) {
 	return backup.ResourceSelector{
 		IncludedResources: []string{"persistentvolumes"},
 	}, nil

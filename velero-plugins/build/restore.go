@@ -6,13 +6,12 @@ import (
 	"strings"
 
 	"github.com/fusor/ocp-velero-plugin/velero-plugins/clients"
-	v1 "github.com/heptio/velero/pkg/apis/ark/v1"
-	"github.com/heptio/velero/pkg/restore"
+        "github.com/heptio/velero/pkg/plugin/velero"
 	buildv1API "github.com/openshift/api/build/v1"
 	"github.com/sirupsen/logrus"
 	corev1API "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
+        "k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
 // RestorePlugin is a restore item action plugin for Velero
@@ -20,26 +19,26 @@ type RestorePlugin struct {
 	Log logrus.FieldLogger
 }
 
-// AppliesTo returns a restore.ResourceSelector that applies to everything
-func (p *RestorePlugin) AppliesTo() (restore.ResourceSelector, error) {
-	return restore.ResourceSelector{
+// AppliesTo returns a velero.ResourceSelector that applies to everything
+func (p *RestorePlugin) AppliesTo() (velero.ResourceSelector, error) {
+	return velero.ResourceSelector{
 		IncludedResources: []string{"builds"},
 	}, nil
 }
 
 // Execute action for the restore plugin for the build resource
-func (p *RestorePlugin) Execute(item runtime.Unstructured, restore *v1.Restore) (runtime.Unstructured, error, error) {
+func (p *RestorePlugin) Execute(input *velero.RestoreItemActionExecuteInput) (*velero.RestoreItemActionExecuteOutput, error) {
 	p.Log.Info("Hello from Build RestorePlugin!")
 
 	build := buildv1API.Build{}
-	itemMarshal, _ := json.Marshal(item)
+	itemMarshal, _ := json.Marshal(input.Item)
 	json.Unmarshal(itemMarshal, &build)
 	if build.Spec.Strategy.Type == buildv1API.SourceBuildStrategyType {
 		secret := p.findBuilderDockercfgSecret(build.Namespace)
 		if secret == "" {
 			// TODO: Come back to this. This is ugly, should really return some type
 			// of error but I don't know what that is exactly
-			return item, nil, nil
+			return velero.NewRestoreItemActionExecuteOutput(input.Item), nil
 		}
 		p.Log.Info(fmt.Sprintf("Found new dockercfg secret: %v", secret))
 
@@ -50,9 +49,8 @@ func (p *RestorePlugin) Execute(item runtime.Unstructured, restore *v1.Restore) 
 	var out map[string]interface{}
 	objrec, _ := json.Marshal(build)
 	json.Unmarshal(objrec, &out)
-	item.SetUnstructuredContent(out)
 
-	return item, nil, nil
+	return velero.NewRestoreItemActionExecuteOutput(&unstructured.Unstructured{Object: out}), nil
 }
 
 func (p *RestorePlugin) findBuilderDockercfgSecret(namespace string) string {

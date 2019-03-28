@@ -5,11 +5,9 @@ import (
 	"strings"
 
 	"k8s.io/apimachinery/pkg/api/meta"
-	"k8s.io/apimachinery/pkg/runtime"
 
 	"github.com/fusor/ocp-velero-plugin/velero-plugins/clients"
-	v1 "github.com/heptio/velero/pkg/apis/velero/v1"
-	"github.com/heptio/velero/pkg/restore"
+        "github.com/heptio/velero/pkg/plugin/velero"
 	"github.com/sirupsen/logrus"
 )
 
@@ -18,18 +16,18 @@ type RestorePlugin struct {
 	Log logrus.FieldLogger
 }
 
-// AppliesTo returns a restore.ResourceSelector that applies to everything.
-func (p *RestorePlugin) AppliesTo() (restore.ResourceSelector, error) {
-	return restore.ResourceSelector{}, nil
+// AppliesTo returns a velero.ResourceSelector that applies to everything.
+func (p *RestorePlugin) AppliesTo() (velero.ResourceSelector, error) {
+	return velero.ResourceSelector{}, nil
 }
 
 // Execute sets a custom annotation on the item being restored.
-func (p *RestorePlugin) Execute(item runtime.Unstructured, restore *v1.Restore) (runtime.Unstructured, error, error) {
+func (p *RestorePlugin) Execute(input *velero.RestoreItemActionExecuteInput) (*velero.RestoreItemActionExecuteOutput, error) {
 	p.Log.Info("Hello from common restore plugin!!")
 
-	metadata, err := meta.Accessor(item)
+	metadata, err := meta.Accessor(input.Item)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	annotations := metadata.GetAnnotations()
@@ -39,11 +37,11 @@ func (p *RestorePlugin) Execute(item runtime.Unstructured, restore *v1.Restore) 
 
 	client, err := clients.NewDiscoveryClient()
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	version, err := client.ServerVersion()
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	if strings.HasSuffix(version.Minor, "+") {
 		version.Minor = strings.TrimSuffix(version.Minor, "+")
@@ -52,10 +50,10 @@ func (p *RestorePlugin) Execute(item runtime.Unstructured, restore *v1.Restore) 
 	annotations[RestoreServerVersion] = fmt.Sprintf("%v.%v", version.Major, version.Minor)
 	registryHostname, err := getRegistryInfo(version.Major, version.Minor)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	annotations[RestoreRegistryHostname] = registryHostname
 	metadata.SetAnnotations(annotations)
 
-	return item, nil, nil
+	return velero.NewRestoreItemActionExecuteOutput(input.Item), nil
 }

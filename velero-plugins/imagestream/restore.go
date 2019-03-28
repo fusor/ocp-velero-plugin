@@ -1,11 +1,9 @@
 package imagestream
 
 import (
-	v1 "github.com/heptio/velero/pkg/apis/velero/v1"
-	"github.com/heptio/velero/pkg/restore"
+        "github.com/heptio/velero/pkg/plugin/velero"
 	"github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/api/meta"
-	"k8s.io/apimachinery/pkg/runtime"
 )
 
 // MyRestorePlugin is a restore item action plugin for Velero
@@ -13,19 +11,19 @@ type RestorePlugin struct {
 	Log logrus.FieldLogger
 }
 
-// AppliesTo returns a restore.ResourceSelector that applies to everything
-func (p *RestorePlugin) AppliesTo() (restore.ResourceSelector, error) {
-	return restore.ResourceSelector{
+// AppliesTo returns a velero.ResourceSelector that applies to everything
+func (p *RestorePlugin) AppliesTo() (velero.ResourceSelector, error) {
+	return velero.ResourceSelector{
 		IncludedResources: []string{"imagestreams"},
 	}, nil
 }
 
-func (p *RestorePlugin) Execute(item runtime.Unstructured, restore *v1.Restore) (runtime.Unstructured, error, error) {
+func (p *RestorePlugin) Execute(input *velero.RestoreItemActionExecuteInput) (*velero.RestoreItemActionExecuteOutput, error) {
 	p.Log.Info("Hello from ImageStream RestorePlugin!")
 
-	metadata, err := meta.Accessor(item)
+	metadata, err := meta.Accessor(input.Item)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	annotations := metadata.GetAnnotations()
@@ -37,5 +35,5 @@ func (p *RestorePlugin) Execute(item runtime.Unstructured, restore *v1.Restore) 
 
 	metadata.SetAnnotations(annotations)
 
-	return item, nil, nil
+	return velero.NewRestoreItemActionExecuteOutput(input.Item), nil
 }

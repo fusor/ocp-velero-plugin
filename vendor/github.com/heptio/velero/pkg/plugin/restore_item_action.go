@@ -1,5 +1,5 @@
 /*
-Copyright 2017 the Heptio Ark contributors.
+Copyright 2017, 2019 the Velero contributors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -24,11 +24,10 @@ import (
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	"k8s.io/apimachinery/pkg/runtime"
 
 	api "github.com/heptio/velero/pkg/apis/velero/v1"
 	proto "github.com/heptio/velero/pkg/plugin/generated"
-	"github.com/heptio/velero/pkg/restore"
+	"github.com/heptio/velero/pkg/plugin/velero"
 )
 
 // RestoreItemActionPlugin is an implementation of go-plugin's Plugin
@@ -38,6 +37,8 @@ type RestoreItemActionPlugin struct {
 	plugin.NetRPCUnsupportedPlugin
 	*pluginBase
 }
+
+var _ velero.RestoreItemAction = &RestoreItemActionGRPCClient{}
 
 // NewRestoreItemActionPlugin constructs a RestoreItemActionPlugin.
 func NewRestoreItemActionPlugin(options ...pluginOption) *RestoreItemActionPlugin {
@@ -69,13 +70,13 @@ func newRestoreItemActionGRPCClient(base *clientBase, clientConn *grpc.ClientCon
 	}
 }
 
-func (c *RestoreItemActionGRPCClient) AppliesTo() (restore.ResourceSelector, error) {
+func (c *RestoreItemActionGRPCClient) AppliesTo() (velero.ResourceSelector, error) {
 	res, err := c.grpcClient.AppliesTo(context.Background(), &proto.AppliesToRequest{Plugin: c.plugin})
 	if err != nil {
-		return restore.ResourceSelector{}, err
+		return velero.ResourceSelector{}, err
 	}
 
-	return restore.ResourceSelector{
+	return velero.ResourceSelector{
 		IncludedNamespaces: res.IncludedNamespaces,
 		ExcludedNamespaces: res.ExcludedNamespaces,
 		IncludedResources:  res.IncludedResources,
@@ -84,31 +85,37 @@ func (c *RestoreItemActionGRPCClient) AppliesTo() (restore.ResourceSelector, err
 	}, nil
 }
 
-func (c *RestoreItemActionGRPCClient) Execute(item runtime.Unstructured, restore *api.Restore) (runtime.Unstructured, error, error) {
-	itemJSON, err := json.Marshal(item.UnstructuredContent())
+func (c *RestoreItemActionGRPCClient) Execute(input *velero.RestoreItemActionExecuteInput) (*velero.RestoreItemActionExecuteOutput, error) {
+	itemJSON, err := json.Marshal(input.Item.UnstructuredContent())
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
-	restoreJSON, err := json.Marshal(restore)
+	itemFromBackupJSON, err := json.Marshal(input.ItemFromBackup.UnstructuredContent())
 	if err != nil {
-		return nil, nil, err
+		return nil, err
+	}
+
+	restoreJSON, err := json.Marshal(input.Restore)
+	if err != nil {
+		return nil, err
 	}
 
 	req := &proto.RestoreExecuteRequest{
-		Plugin:  c.plugin,
-		Item:    itemJSON,
-		Restore: restoreJSON,
+		Plugin:         c.plugin,
+		Item:           itemJSON,
+		ItemFromBackup: itemFromBackupJSON,
+		Restore:        restoreJSON,
 	}
 
 	res, err := c.grpcClient.Execute(context.Background(), req)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	var updatedItem unstructured.Unstructured
 	if err := json.Unmarshal(res.Item, &updatedItem); err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	var warning error
@@ -116,7 +123,10 @@ func (c *RestoreItemActionGRPCClient) Execute(item runtime.Unstructured, restore
 		warning = errors.New(res.Warning)
 	}
 
-	return &updatedItem, warning, nil
+	return &velero.RestoreItemActionExecuteOutput{
+		UpdatedItem: &updatedItem,
+		Warning:     warning,
+	}, nil
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -135,13 +145,13 @@ type RestoreItemActionGRPCServer struct {
 	mux *serverMux
 }
 
-func (s *RestoreItemActionGRPCServer) getImpl(name string) (restore.ItemAction, error) {
+func (s *RestoreItemActionGRPCServer) getImpl(name string) (velero.RestoreItemAction, error) {
 	impl, err := s.mux.getHandler(name)
 	if err != nil {
 		return nil, err
 	}
 
-	itemAction, ok := impl.(restore.ItemAction)
+	itemAction, ok := impl.(velero.RestoreItemAction)
 	if !ok {
 		return nil, errors.Errorf("%T is not a restore item action", impl)
 	}
@@ -149,7 +159,13 @@ func (s *RestoreItemActionGRPCServer) getImpl(name string) (restore.ItemAction, 
 	return itemAction, nil
 }
 
-func (s *RestoreItemActionGRPCServer) AppliesTo(ctx context.Context, req *proto.AppliesToRequest) (*proto.AppliesToResponse, error) {
+func (s *RestoreItemActionGRPCServer) AppliesTo(ctx context.Context, req *proto.AppliesToRequest) (response *proto.AppliesToResponse, err error) {
+	defer func() {
+		if recoveredErr := handlePanic(recover()); recoveredErr != nil {
+			err = recoveredErr
+		}
+	}()
+
 	impl, err := s.getImpl(req.Plugin)
 	if err != nil {
 		return nil, err
@@ -169,38 +185,53 @@ func (s *RestoreItemActionGRPCServer) AppliesTo(ctx context.Context, req *proto.
 	}, nil
 }
 
-func (s *RestoreItemActionGRPCServer) Execute(ctx context.Context, req *proto.RestoreExecuteRequest) (*proto.RestoreExecuteResponse, error) {
+func (s *RestoreItemActionGRPCServer) Execute(ctx context.Context, req *proto.RestoreExecuteRequest) (response *proto.RestoreExecuteResponse, err error) {
+	defer func() {
+		if recoveredErr := handlePanic(recover()); recoveredErr != nil {
+			err = recoveredErr
+		}
+	}()
+
 	impl, err := s.getImpl(req.Plugin)
 	if err != nil {
 		return nil, err
 	}
 
 	var (
-		item    unstructured.Unstructured
-		restore api.Restore
+		item           unstructured.Unstructured
+		itemFromBackup unstructured.Unstructured
+		restoreObj     api.Restore
 	)
 
 	if err := json.Unmarshal(req.Item, &item); err != nil {
 		return nil, err
 	}
 
-	if err := json.Unmarshal(req.Restore, &restore); err != nil {
+	if err := json.Unmarshal(req.ItemFromBackup, &itemFromBackup); err != nil {
 		return nil, err
 	}
 
-	res, warning, err := impl.Execute(&item, &restore)
+	if err := json.Unmarshal(req.Restore, &restoreObj); err != nil {
+		return nil, err
+	}
+
+	executeOutput, err := impl.Execute(&velero.RestoreItemActionExecuteInput{
+		Item:           &item,
+		ItemFromBackup: &itemFromBackup,
+		Restore:        &restoreObj,
+	})
 	if err != nil {
 		return nil, err
 	}
 
-	updatedItem, err := json.Marshal(res)
+	updatedItem, err := json.Marshal(executeOutput.UpdatedItem)
 	if err != nil {
 		return nil, err
 	}
 
 	var warnMessage string
-	if warning != nil {
-		warnMessage = warning.Error()
+	if executeOutput.Warning != nil {
+		warnMessage = executeOutput.Warning.Error()
 	}
 
 	return &proto.RestoreExecuteResponse{

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 
 	"github.com/fusor/ocp-velero-plugin/velero-plugins/clients"
+	"github.com/fusor/ocp-velero-plugin/velero-plugins/common"
 	v1 "github.com/heptio/velero/pkg/apis/velero/v1"
 	"github.com/heptio/velero/pkg/backup"
 	"github.com/sirupsen/logrus"
@@ -43,8 +44,10 @@ func (p *BackupPlugin) Execute(item runtime.Unstructured, backup *v1.Backup) (ru
 	if err != nil {
 		return nil, nil, err
 	}
-	// Set reclaimPolicy to retain
-	pv.Spec.PersistentVolumeReclaimPolicy = corev1API.PersistentVolumeReclaimRetain
+	// Set reclaimPolicy to retain if swinging PV
+	if backup.Annotations[common.SwingPVAnnotation] != "" {
+		pv.Spec.PersistentVolumeReclaimPolicy = corev1API.PersistentVolumeReclaimRetain
+	}
 
 	// Update PV
 	pv, err = client.PersistentVolumes().Update(pv)

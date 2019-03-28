@@ -2,7 +2,6 @@ package main
 
 import (
 	"github.com/fusor/ocp-velero-plugin/velero-plugins/build"
-	"github.com/fusor/ocp-velero-plugin/velero-plugins/buildconfig"
 	"github.com/fusor/ocp-velero-plugin/velero-plugins/common"
 	"github.com/fusor/ocp-velero-plugin/velero-plugins/imagestream"
 	"github.com/fusor/ocp-velero-plugin/velero-plugins/route"
@@ -16,7 +15,6 @@ func main() {
 		RegisterRestoreItemAction("common-restore-plugin", newCommonRestorePlugin).
 		RegisterBackupItemAction("is-backup-plugin", newImageStreamBackupPlugin).
 		RegisterRestoreItemAction("is-restore-plugin", newImageStreamRestorePlugin).
-		RegisterBackupItemAction("route-backup-plugin", newRouteBackupPlugin).
 		RegisterRestoreItemAction("route-restore-plugin", newRouteRestorePlugin).
 		RegisterRestoreItemAction("build-restore-plugin", newBuildRestorePlugin).
 		Serve()
@@ -30,20 +28,8 @@ func newImageStreamRestorePlugin(logger logrus.FieldLogger) (interface{}, error)
 	return &imagestream.RestorePlugin{Log: logger}, nil
 }
 
-func newBuildConfigBackupPlugin(logger logrus.FieldLogger) (interface{}, error) {
-	return &buildconfig.BackupPlugin{Log: logger}, nil
-}
-
-func newBuildConfigRestorePlugin(logger logrus.FieldLogger) (interface{}, error) {
-	return &buildconfig.RestorePlugin{Log: logger}, nil
-}
-
 func newBuildRestorePlugin(logger logrus.FieldLogger) (interface{}, error) {
 	return &build.RestorePlugin{Log: logger}, nil
-}
-
-func newRouteBackupPlugin(logger logrus.FieldLogger) (interface{}, error) {
-	return &route.BackupPlugin{Log: logger}, nil
 }
 
 func newRouteRestorePlugin(logger logrus.FieldLogger) (interface{}, error) {

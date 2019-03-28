@@ -6,7 +6,6 @@ import (
 	"github.com/fusor/ocp-velero-plugin/velero-plugins/clients"
 	"github.com/fusor/ocp-velero-plugin/velero-plugins/common"
 	v1 "github.com/heptio/velero/pkg/apis/velero/v1"
-	"github.com/heptio/velero/pkg/backup"
 	"github.com/heptio/velero/pkg/plugin/velero"
 	"github.com/sirupsen/logrus"
 	corev1API "k8s.io/api/core/v1"
@@ -21,13 +20,13 @@ type BackupPlugin struct {
 
 // AppliesTo returns a backup.ResourceSelector that applies to everything.
 func (p *BackupPlugin) AppliesTo() (velero.ResourceSelector, error) {
-	return backup.ResourceSelector{
+	return velero.ResourceSelector{
 		IncludedResources: []string{"persistentvolumes"},
 	}, nil
 }
 
 // Execute sets a custom annotation on the item being backed up.
-func (p *BackupPlugin) Execute(item runtime.Unstructured, backup *v1.Backup) (runtime.Unstructured, []backup.ResourceIdentifier, error) {
+func (p *BackupPlugin) Execute(item runtime.Unstructured, backup *v1.Backup) (runtime.Unstructured, []velero.ResourceIdentifier, error) {
 	p.Log.Info("Hello from PV backup plugin!!")
 
 	// Convert to PV

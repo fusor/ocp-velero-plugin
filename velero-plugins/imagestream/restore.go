@@ -1,7 +1,7 @@
 package imagestream
 
 import (
-        "github.com/heptio/velero/pkg/plugin/velero"
+	"github.com/heptio/velero/pkg/plugin/velero"
 	"github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/api/meta"
 )

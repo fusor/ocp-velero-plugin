@@ -54,7 +54,10 @@ container: all
 	cp Dockerfile _output/Dockerfile
 	docker build -t $(IMAGE) -f _output/Dockerfile _output
 
-ci: all
+test:
+	go test -installsuffix "static"  -tags "containers_image_ostree_stub exclude_graphdriver_devicemapper exclude_graphdriver_btrfs containers_image_openpgp exclude_graphdriver_overlay" ./velero-plugins/...
+
+ci: all test
 
 clean:
 	rm -rf .go _output

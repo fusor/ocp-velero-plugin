@@ -6,11 +6,11 @@ import (
 
 	"github.com/fusor/ocp-velero-plugin/velero-plugins/clients"
 	"github.com/fusor/ocp-velero-plugin/velero-plugins/common"
-        "github.com/heptio/velero/pkg/plugin/velero"
+	"github.com/heptio/velero/pkg/plugin/velero"
 	routev1API "github.com/openshift/api/route/v1"
 	"github.com/sirupsen/logrus"
-	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 )
 
 // RestorePlugin is a restore item action plugin for Velero
@@ -32,20 +32,6 @@ func (p *RestorePlugin) Execute(input *velero.RestoreItemActionExecuteInput) (*v
 	itemMarshal, _ := json.Marshal(input.Item)
 	json.Unmarshal(itemMarshal, &route)
 
-	metadata, err := meta.Accessor(input.Item)
-	if err != nil {
-		return nil, err
-	}
-
-	annotations := metadata.GetAnnotations()
-	if annotations == nil {
-		annotations = make(map[string]string)
-	}
-
-	annotations["openshift.io/route-restore-plugin"] = "1"
-
-	metadata.SetAnnotations(annotations)
-
 	client, err := clients.NewCoreClient()
 	if err != nil {
 		return nil, err
@@ -62,6 +48,12 @@ func (p *RestorePlugin) Execute(input *velero.RestoreItemActionExecuteInput) (*v
 
 	subdomain := serverConfig.RoutingConfig.Subdomain
 
+	output := replaceSubdomain(input.Item, &route, subdomain)
+
+	return output, nil
+}
+
+func replaceSubdomain(item runtime.Unstructured, route *routev1API.Route, subdomain string) *velero.RestoreItemActionExecuteOutput {
 	host := route.Spec.Host
 	name := strings.Split(host, ".")[0]
 	newHost := name + "." + subdomain
@@ -70,7 +62,7 @@ func (p *RestorePlugin) Execute(input *velero.RestoreItemActionExecuteInput) (*v
 	var out map[string]interface{}
 	objrec, _ := json.Marshal(route)
 	json.Unmarshal(objrec, &out)
-	input.Item.SetUnstructuredContent(out)
+	item.SetUnstructuredContent(out)
 
-	return velero.NewRestoreItemActionExecuteOutput(input.Item), nil
+	return velero.NewRestoreItemActionExecuteOutput(item)
 }

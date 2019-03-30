@@ -2,12 +2,14 @@ package imagestream
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/containers/image/copy"
 	"github.com/containers/image/signature"
 	"github.com/containers/image/transports/alltransports"
 	"github.com/containers/image/types"
+	imagev1API "github.com/openshift/api/image/v1"
 
 	"k8s.io/client-go/rest"
 )
@@ -44,7 +46,9 @@ func internalRegistrySystemContext() (*types.SystemContext, error) {
 	if err != nil {
 		return nil, err
 	}
-
+	if config.BearerToken == "" {
+		return nil, errors.New("BearerToken not found, can't authenticate with registry")
+	}
 	ctx := &types.SystemContext{
 		DockerDaemonInsecureSkipTLSVerify: true,
 		DockerInsecureSkipTLSVerify:       types.OptionalBoolTrue,
@@ -62,4 +66,13 @@ func migrationRegistrySystemContext() (*types.SystemContext, error) {
 		DockerInsecureSkipTLSVerify:       types.OptionalBoolTrue,
 	}
 	return ctx, nil
+}
+
+func findSpecTag(tags []imagev1API.TagReference, name string) *imagev1API.TagReference {
+	for _, tag := range tags {
+		if tag.Name == name {
+			return &tag
+		}
+	}
+	return nil
 }

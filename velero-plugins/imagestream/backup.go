@@ -13,7 +13,7 @@ import (
 
 	"github.com/fusor/ocp-velero-plugin/velero-plugins/common"
 	v1 "github.com/heptio/velero/pkg/apis/velero/v1"
-        "github.com/heptio/velero/pkg/plugin/velero"
+	"github.com/heptio/velero/pkg/plugin/velero"
 )
 
 // BackupPlugin is a backup item action plugin for Heptio Ark.
@@ -40,8 +40,6 @@ func (p *BackupPlugin) Execute(item runtime.Unstructured, backup *v1.Backup) (ru
 	if annotations == nil {
 		annotations = make(map[string]string)
 	}
-
-	annotations["openshift.io/imagestream-plugin"] = "1"
 
 	internalRegistry := annotations[common.BackupRegistryHostname]
 	if len(internalRegistry) == 0 {

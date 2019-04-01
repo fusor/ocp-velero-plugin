@@ -47,6 +47,18 @@ func (p *RestorePlugin) Execute(input *velero.RestoreItemActionExecuteInput) (*v
 	p.Log.Info(fmt.Sprintf("Found new dockercfg secret: %v", secret))
 	build = createNewPushSecret(build, secret)
 
+	// Swap out stale imageRefs
+	version, err := common.GetServerVersion()
+	if err != nil {
+		p.Log.Error("Error getting server version: ", err)
+		return nil, err
+	}
+	registry, err := common.GetRegistryInfo(version.Major, version.Minor)
+	if err != nil {
+		p.Log.Error("Error getting registry information: ", err)
+		return nil, err
+	}
+
 	var out map[string]interface{}
 	objrec, _ := json.Marshal(build)
 	json.Unmarshal(objrec, &out)

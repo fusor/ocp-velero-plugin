@@ -5,7 +5,7 @@ import (
 	"github.com/fusor/ocp-velero-plugin/velero-plugins/common"
 	"github.com/fusor/ocp-velero-plugin/velero-plugins/imagestream"
 	"github.com/fusor/ocp-velero-plugin/velero-plugins/route"
-	veleroplugin "github.com/heptio/velero/pkg/plugin"
+	veleroplugin "github.com/heptio/velero/pkg/plugin/framework"
 	"github.com/sirupsen/logrus"
 )
 

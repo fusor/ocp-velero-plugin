@@ -1,5 +1,5 @@
 /*
-Copyright 2017 the Heptio Ark contributors.
+Copyright 2017, 2019 the Velero contributors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -31,7 +31,8 @@ type RestoreItemAction interface {
 
 	// Execute allows the ItemAction to perform arbitrary logic with the item being restored,
 	// including mutating the item itself prior to restore. The item (unmodified or modified)
-	// should be returned, along with a warning (which will be logged but will not prevent
+	// should be returned, along with an optional slice of ResourceIdentifiers specifying additional
+	// related items that should be restored, a warning (which will be logged but will not prevent
 	// the item from being restored) or error (which will be logged and will prevent the item
 	// from being restored) if applicable.
 	Execute(input *RestoreItemActionExecuteInput) (*RestoreItemActionExecuteOutput, error)
@@ -52,9 +53,11 @@ type RestoreItemActionExecuteInput struct {
 type RestoreItemActionExecuteOutput struct {
 	// UpdatedItem is the item being restored mutated by ItemAction.
 	UpdatedItem runtime.Unstructured
-	// Warning is an exceptional message returned from ItemAction
-	// which is not preventing the item from being restored.
-	Warning error
+
+	// AdditionalItems is a list of additional related items that should
+	// be restored.
+	AdditionalItems []ResourceIdentifier
+
 	// SkipRestore tells velero to stop executing further actions
 	// on this item, and skip the restore step.
 	SkipRestore bool
@@ -67,11 +70,6 @@ func NewRestoreItemActionExecuteOutput(item runtime.Unstructured) *RestoreItemAc
 	}
 }
 
-// WithWarning returns a warning for RestoreItemActionExecuteOutput
-func (r *RestoreItemActionExecuteOutput) WithWarning(err error) *RestoreItemActionExecuteOutput {
-	r.Warning = err
-	return r
-}
 // WithoutRestore returns SkipRestore for RestoreItemActionExecuteOutput
 func (r *RestoreItemActionExecuteOutput) WithoutRestore() *RestoreItemActionExecuteOutput {
 	r.SkipRestore = true

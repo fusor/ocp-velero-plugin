@@ -58,8 +58,9 @@ func (m *RestoreExecuteRequest) GetItemFromBackup() []byte {
 }
 
 type RestoreExecuteResponse struct {
-	Item    []byte `protobuf:"bytes,1,opt,name=item,proto3" json:"item,omitempty"`
-	Warning string `protobuf:"bytes,2,opt,name=warning" json:"warning,omitempty"`
+	Item        []byte `protobuf:"bytes,1,opt,name=item,proto3" json:"item,omitempty"`
+	Warning     string `protobuf:"bytes,2,opt,name=warning" json:"warning,omitempty"`
+	SkipRestore bool   `protobuf:"varint,3,opt,name=skipRestore,proto3" json:"skipRestore,omitempty"`
 }
 
 func (m *RestoreExecuteResponse) Reset()                    { *m = RestoreExecuteResponse{} }
@@ -79,6 +80,13 @@ func (m *RestoreExecuteResponse) GetWarning() string {
 		return m.Warning
 	}
 	return ""
+}
+
+func (m *RestoreExecuteResponse) GetSkipRestore() bool {
+	if m != nil {
+		return m.SkipRestore
+	}
+	return false
 }
 
 func init() {

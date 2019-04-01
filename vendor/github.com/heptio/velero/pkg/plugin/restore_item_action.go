@@ -126,6 +126,7 @@ func (c *RestoreItemActionGRPCClient) Execute(input *velero.RestoreItemActionExe
 	return &velero.RestoreItemActionExecuteOutput{
 		UpdatedItem: &updatedItem,
 		Warning:     warning,
+		SkipRestore: res.SkipRestore,
 	}, nil
 }
 
@@ -235,7 +236,8 @@ func (s *RestoreItemActionGRPCServer) Execute(ctx context.Context, req *proto.Re
 	}
 
 	return &proto.RestoreExecuteResponse{
-		Item:    updatedItem,
-		Warning: warnMessage,
+		Item:        updatedItem,
+		Warning:     warnMessage,
+		SkipRestore: executeOutput.SkipRestore,
 	}, nil
 }

@@ -55,6 +55,9 @@ type RestoreItemActionExecuteOutput struct {
 	// Warning is an exceptional message returned from ItemAction
 	// which is not preventing the item from being restored.
 	Warning error
+	// SkipRestore tells velero to stop executing further actions
+	// on this item, and skip the restore step.
+	SkipRestore bool
 }
 
 // NewRestoreItemActionExecuteOutput creates a new RestoreItemActionExecuteOutput
@@ -67,5 +70,10 @@ func NewRestoreItemActionExecuteOutput(item runtime.Unstructured) *RestoreItemAc
 // WithWarning returns a warning for RestoreItemActionExecuteOutput
 func (r *RestoreItemActionExecuteOutput) WithWarning(err error) *RestoreItemActionExecuteOutput {
 	r.Warning = err
+	return r
+}
+// WithoutRestore returns SkipRestore for RestoreItemActionExecuteOutput
+func (r *RestoreItemActionExecuteOutput) WithoutRestore() *RestoreItemActionExecuteOutput {
+	r.SkipRestore = true
 	return r
 }

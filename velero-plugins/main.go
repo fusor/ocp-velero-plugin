@@ -15,7 +15,7 @@ func main() {
 	veleroplugin.NewServer().
 		RegisterBackupItemAction("common-backup-plugin", newCommonBackupPlugin).
 		RegisterRestoreItemAction("common-restore-plugin", newCommonRestorePlugin).
-		RegisterRestoreItemAction("pv-backup-plugin", newPVBackupPlugin).
+		RegisterBackupItemAction("pv-backup-plugin", newPVBackupPlugin).
 		RegisterBackupItemAction("is-backup-plugin", newImageStreamBackupPlugin).
 		RegisterRestoreItemAction("is-restore-plugin", newImageStreamRestorePlugin).
 		RegisterBackupItemAction("route-backup-plugin", newRouteBackupPlugin).

@@ -368,12 +368,14 @@
   revision = "ca137eb4b4389c9bc6f1a6d887f056bf16c00510"
 
 [[projects]]
-  branch = "master"
-  digest = "1:f33adf6b54765c5914f2133d1f567ac8c82dbd3723d1d9ebbad16df421c7a148"
+  digest = "1:143aae8d04a6133eea9c6400b90a1f47ae1100b48a1636160aba861d1b26c5b2"
   name = "github.com/hashicorp/go-plugin"
-  packages = ["."]
+  packages = [
+    ".",
+    "internal/plugin",
+  ]
   pruneopts = "NUT"
-  revision = "e2fbc6864d18d3c37b6cde4297ec9fca266d28f1"
+  revision = "3f118e8ee104b6f22aeb12453fab56aed1356186"
 
 [[projects]]
   branch = "master"
@@ -385,19 +387,18 @@
 
 [[projects]]
   branch = "fusor-dev"
-  digest = "1:c5c8922c580cd2e4d0f7fb0c2bebe7a0410bb5d333335867c901513ea60ab6ae"
+  digest = "1:0fc681361bfe7d259a0ae75aef3bca0db4431e42595b0a5ecc5467c47f51b8e1"
   name = "github.com/heptio/velero"
   packages = [
     "pkg/apis/velero/v1",
     "pkg/cmd/util/flag",
-    "pkg/plugin",
+    "pkg/plugin/framework",
     "pkg/plugin/generated",
     "pkg/plugin/velero",
-    "pkg/util/filesystem",
     "pkg/util/logging",
   ]
   pruneopts = "NUT"
-  revision = "ca33d4d05934f1e46c651ee9abf427a4a34338ac"
+  revision = "265bccf0628507627e56f8e6bcd4bc44ae184f76"
   source = "github.com/fusor/velero.git"
 
 [[projects]]
@@ -510,6 +511,14 @@
   packages = ["."]
   pruneopts = "NUT"
   revision = "b2432428689ca58c2b8e8dea9449d3295cf96fc9"
+
+[[projects]]
+  digest = "1:3b517122f3aad1ecce45a630ea912b3092b4729f25532a911d0cb2935a1f9352"
+  name = "github.com/oklog/run"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "4dadeb3030eda0273a12382bb2348ffc7c9d1a39"
+  version = "v1.0.0"
 
 [[projects]]
   digest = "1:e0cc8395ea893c898ff5eb0850f4d9851c1f57c78c232304a026379a47a552d0"
@@ -825,15 +834,14 @@
   revision = "e225da77a7e68af35c70ccbf71af2b83e6acac3c"
 
 [[projects]]
-  branch = "master"
-  digest = "1:fc9d2df0ab2c2c2044a369f2afd421f645b16b622b123780820b0f20e7f45be8"
+  digest = "1:51bfac9fe01b6a949bfed6db70b00bada281f0d64e5296ec644163aa977bfee0"
   name = "golang.org/x/sys"
   packages = [
     "unix",
     "windows",
   ]
   pruneopts = "NUT"
-  revision = "0dd5e194bbf5eb84a39666eb4c98a4d007e4203a"
+  revision = "1c9583448a9c3aa0f9a6a5241bf73c0bd8aafded"
 
 [[projects]]
   branch = "master"
@@ -891,32 +899,46 @@
   revision = "11c7f9e547da6db876260ce49ea7536985904c9b"
 
 [[projects]]
-  digest = "1:5517c6742469944df82f34381a95208ada0ef6fac67c5dcb9bca386b914034db"
+  digest = "1:0b1629e326b8754726e94f2c3acc87fbc6669a6c1e36ab059bdde62462ccd1a2"
   name = "google.golang.org/grpc"
   packages = [
     ".",
     "balancer",
+    "balancer/base",
+    "balancer/roundrobin",
+    "binarylog/grpc_binarylog_v1",
     "codes",
     "connectivity",
     "credentials",
-    "grpclb/grpc_lb_v1/messages",
+    "credentials/internal",
+    "encoding",
+    "encoding/proto",
     "grpclog",
     "health",
     "health/grpc_health_v1",
     "internal",
+    "internal/backoff",
+    "internal/binarylog",
+    "internal/channelz",
+    "internal/envconfig",
+    "internal/grpcrand",
+    "internal/grpcsync",
+    "internal/syscall",
+    "internal/transport",
     "keepalive",
     "metadata",
     "naming",
     "peer",
     "resolver",
+    "resolver/dns",
+    "resolver/passthrough",
     "stats",
     "status",
     "tap",
-    "transport",
   ]
   pruneopts = "NUT"
-  revision = "401e0e00e4bb830a10496d64cd95e068c5bf50de"
-  version = "v1.7.3"
+  revision = "3507fb8e1a5ad030303c106fef3a47c9fdad16ad"
+  version = "v1.19.1"
 
 [[projects]]
   digest = "1:ef72505cf098abdd34efeea032103377bec06abb61d8a06f002d5d296a4b1185"
@@ -1055,7 +1077,7 @@
     "github.com/containers/image/transports/alltransports",
     "github.com/containers/image/types",
     "github.com/heptio/velero/pkg/apis/velero/v1",
-    "github.com/heptio/velero/pkg/plugin",
+    "github.com/heptio/velero/pkg/plugin/framework",
     "github.com/heptio/velero/pkg/plugin/velero",
     "github.com/openshift/api/build/v1",
     "github.com/openshift/api/image/v1",

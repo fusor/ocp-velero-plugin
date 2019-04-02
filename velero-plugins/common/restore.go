@@ -2,12 +2,8 @@ package common
 
 import (
 	"fmt"
-	"strings"
 
-	"k8s.io/apimachinery/pkg/api/meta"
-
-	"github.com/fusor/ocp-velero-plugin/velero-plugins/clients"
-        "github.com/heptio/velero/pkg/plugin/velero"
+	"github.com/heptio/velero/pkg/plugin/velero"
 	"github.com/sirupsen/logrus"
 )
 
@@ -25,27 +21,12 @@ func (p *RestorePlugin) AppliesTo() (velero.ResourceSelector, error) {
 func (p *RestorePlugin) Execute(input *velero.RestoreItemActionExecuteInput) (*velero.RestoreItemActionExecuteOutput, error) {
 	p.Log.Info("Hello from common restore plugin!!")
 
-	metadata, err := meta.Accessor(input.Item)
+	metadata, annotations, err := getMetadataAndAnnotations(input.Item)
 	if err != nil {
 		return nil, err
 	}
 
-	annotations := metadata.GetAnnotations()
-	if annotations == nil {
-		annotations = make(map[string]string)
-	}
-
-	client, err := clients.NewDiscoveryClient()
-	if err != nil {
-		return nil, err
-	}
-	version, err := client.ServerVersion()
-	if err != nil {
-		return nil, err
-	}
-	if strings.HasSuffix(version.Minor, "+") {
-		version.Minor = strings.TrimSuffix(version.Minor, "+")
-	}
+	version, err := getVersion()
 
 	annotations[RestoreServerVersion] = fmt.Sprintf("%v.%v", version.Major, version.Minor)
 	registryHostname, err := getRegistryInfo(version.Major, version.Minor)

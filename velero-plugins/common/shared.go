@@ -5,9 +5,13 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/fusor/ocp-velero-plugin/velero-plugins/clients"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/version"
 )
 
 func getRegistryInfo(major, minor string) (string, error) {
@@ -48,4 +52,34 @@ func getRegistryInfo(major, minor string) (string, error) {
 		}
 		return internalRegistry, nil
 	}
+}
+
+func getMetadataAndAnnotations(item runtime.Unstructured) (metav1.Object, map[string]string, error) {
+	metadata, err := meta.Accessor(item)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	annotations := metadata.GetAnnotations()
+	if annotations == nil {
+		annotations = make(map[string]string)
+	}
+
+	return metadata, annotations, nil
+}
+
+func getVersion() (*version.Info, error) {
+	client, err := clients.NewDiscoveryClient()
+	if err != nil {
+		return nil, err
+	}
+	version, err := client.ServerVersion()
+	if err != nil {
+		return nil, err
+	}
+	if strings.HasSuffix(version.Minor, "+") {
+		version.Minor = strings.TrimSuffix(version.Minor, "+")
+	}
+
+	return version, nil
 }

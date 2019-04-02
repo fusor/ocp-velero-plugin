@@ -49,6 +49,7 @@ func (p *RestorePlugin) Execute(input *velero.RestoreItemActionExecuteInput) (*v
 	build = createNewPushSecret(build, secret)
 
 	// Swap out stale imageRefs
+	// TEMP: Getting registry information dynamically because annotations do not exist
 	version, err := common.GetServerVersion()
 	if err != nil {
 		p.Log.Error("Error getting server version: ", err)
@@ -60,18 +61,24 @@ func (p *RestorePlugin) Execute(input *velero.RestoreItemActionExecuteInput) (*v
 		return nil, err
 	}
 	name := build.Spec.Strategy.SourceStrategy.From.Name
-	p.Log.Info(fmt.Sprintf("registry: %v", registry))
-	p.Log.Info(fmt.Sprintf("name: %v", name))
-	sha := strings.Split(name, "@")[1]
-	splitName := strings.Split(strings.Split(name, "@")[0], "/")
+	shaSplit := strings.Split(name, "@")
+	if len(shaSplit) < 2 {
+		err = fmt.Errorf("unexpected image reference [%v]", name)
+		return nil, err
+	}
+	sha := shaSplit[1]
+	splitName := strings.Split(shaSplit[0], "/")
+	if len(splitName) < 2 {
+		err = fmt.Errorf("unexpected image reference [%v]", name)
+		return nil, err
+	}
 	namespacedName := splitName[len(splitName)-2:]
-	new := fmt.Sprintf("%s/%s/%s@%s", registry, namespacedName[0], namespacedName[1], sha)
-	p.Log.Info(fmt.Sprintf("new: %v", new))
+	newName := fmt.Sprintf("%s/%s/%s@%s", registry, namespacedName[0], namespacedName[1], sha)
 
 	// Replace all imageRefs
-	build.Spec.Strategy.SourceStrategy.From.Name = new
-	for i, trigger := range build.Spec.TriggeredBy {
-		trigger.ImageChangeBuild.FromRef.Name = new
+	build.Spec.Strategy.SourceStrategy.From.Name = newName
+	for _, trigger := range build.Spec.TriggeredBy {
+		trigger.ImageChangeBuild.FromRef.Name = newName
 	}
 
 	var out map[string]interface{}

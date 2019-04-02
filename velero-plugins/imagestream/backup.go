@@ -43,20 +43,18 @@ func (p *BackupPlugin) Execute(item runtime.Unstructured, backup *v1.Backup) (ru
 
 	internalRegistry := annotations[common.BackupRegistryHostname]
 	if len(internalRegistry) == 0 {
-		return nil, nil, errors.New("migration registry not found for annotation \"openshift.io/backup-registry-hostname\"")
+		return nil, nil, errors.New("backup cluster registry not found for annotation \"openshift.io/backup-registry-hostname\"")
 	}
 	migrationRegistry := backup.Annotations[common.MigrationRegistry]
 	if len(migrationRegistry) == 0 {
 		return nil, nil, errors.New("migration registry not found for annotation \"openshift.io/migration\"")
 	}
-	// FIXME: do we need to compare registry to dockerRepo?
-	//dockerRepo := im.Status.DockerImageRepository
 	p.Log.Info(fmt.Sprintf("internal registry: %#v", internalRegistry))
 
 	localImageCopied := false
 	localImageCopiedByTag := false
 	for _, tag := range im.Status.Tags {
-		p.Log.Info(fmt.Sprintf("tag: %#v", tag.Tag))
+		p.Log.Info(fmt.Sprintf("Backing up tag: %#v", tag.Tag))
 		// FIXME: remove this comment once the below logic is implemented in the other plugins
 		// in imagestreamtag restore plugin: restore if not local || has a tag reference
 		// in imagestream backup plugin: copy all local images image (reverse order per tag):
@@ -76,22 +74,23 @@ func (p *BackupPlugin) Execute(item runtime.Unstructured, backup *v1.Backup) (ru
 		// Iterate over items in reverse order so most recently tagged is copied last
 		for i := len(tag.Items) - 1; i >= 0; i-- {
 			dockerImageReference := tag.Items[i].DockerImageReference
-			localImage := strings.HasPrefix(dockerImageReference, internalRegistry)
-			//p.Log.Info(fmt.Sprintf("image is local?: %t", localImage))
-			if localImage {
+			if strings.HasPrefix(dockerImageReference, internalRegistry) {
 				localImageCopied = true
 				destTag := "@" + tag.Items[i].Image
 				if copyToTag {
 					localImageCopiedByTag = true
 					destTag = ":" + tag.Tag
 				}
-				manifest, err := copyImageBackup(fmt.Sprintf("docker://%s", dockerImageReference), fmt.Sprintf("docker://%s/%s/%s%s", migrationRegistry, im.Namespace, im.Name, destTag))
+				srcPath := fmt.Sprintf("docker://%s", dockerImageReference)
+				destPath := fmt.Sprintf("docker://%s/%s/%s%s", migrationRegistry, im.Namespace, im.Name, destTag)
+				p.Log.Info(fmt.Sprintf("copying from: %s", srcPath))
+				p.Log.Info(fmt.Sprintf("copying to: %s", destPath))
+
+				manifest, err := copyImageBackup(srcPath, destPath)
 				if err != nil {
 					return nil, nil, err
 				}
 				p.Log.Info(fmt.Sprintf("manifest of copied image: %s", manifest))
-				p.Log.Info(fmt.Sprintf("copied from: docker://%s", dockerImageReference))
-				p.Log.Info(fmt.Sprintf("copied to: docker://%s/%s/%s%s", migrationRegistry, im.Namespace, im.Name, destTag))
 			}
 		}
 	}
@@ -106,15 +105,6 @@ func (p *BackupPlugin) Execute(item runtime.Unstructured, backup *v1.Backup) (ru
 	item.SetUnstructuredContent(out)
 
 	return item, nil, nil
-}
-
-func findSpecTag(tags []imagev1API.TagReference, name string) *imagev1API.TagReference {
-	for _, tag := range tags {
-		if tag.Name == name {
-			return &tag
-		}
-	}
-	return nil
 }
 
 func findStatusTag(tags []imagev1API.NamedTagEventList, name string) *imagev1API.NamedTagEventList {

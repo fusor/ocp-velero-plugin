@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/fusor/ocp-velero-plugin/velero-plugins/clients"
+	"github.com/fusor/ocp-velero-plugin/velero-plugins/common"
 	"github.com/heptio/velero/pkg/plugin/velero"
 	buildv1API "github.com/openshift/api/build/v1"
 	"github.com/sirupsen/logrus"
@@ -57,6 +58,20 @@ func (p *RestorePlugin) Execute(input *velero.RestoreItemActionExecuteInput) (*v
 	if err != nil {
 		p.Log.Error("Error getting registry information: ", err)
 		return nil, err
+	}
+	name := build.Spec.Strategy.SourceStrategy.From.Name
+	p.Log.Info(fmt.Sprintf("registry: %v", registry))
+	p.Log.Info(fmt.Sprintf("name: %v", name))
+	sha := strings.Split(name, "@")[1]
+	splitName := strings.Split(strings.Split(name, "@")[0], "/")
+	namespacedName := splitName[len(splitName)-2:]
+	new := fmt.Sprintf("%s/%s/%s@%s", registry, namespacedName[0], namespacedName[1], sha)
+	p.Log.Info(fmt.Sprintf("new: %v", new))
+
+	// Replace all imageRefs
+	build.Spec.Strategy.SourceStrategy.From.Name = new
+	for i, trigger := range build.Spec.TriggeredBy {
+		trigger.ImageChangeBuild.FromRef.Name = new
 	}
 
 	var out map[string]interface{}

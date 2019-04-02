@@ -2,14 +2,11 @@ package common
 
 import (
 	"fmt"
-	"strings"
 
-	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/runtime"
 
-	"github.com/fusor/ocp-velero-plugin/velero-plugins/clients"
 	v1 "github.com/heptio/velero/pkg/apis/velero/v1"
-        "github.com/heptio/velero/pkg/plugin/velero"
+	"github.com/heptio/velero/pkg/plugin/velero"
 	"github.com/sirupsen/logrus"
 )
 
@@ -27,27 +24,12 @@ func (p *BackupPlugin) AppliesTo() (velero.ResourceSelector, error) {
 func (p *BackupPlugin) Execute(item runtime.Unstructured, backup *v1.Backup) (runtime.Unstructured, []velero.ResourceIdentifier, error) {
 	p.Log.Info("Hello from common backup plugin!!")
 
-	metadata, err := meta.Accessor(item)
+	metadata, annotations, err := getMetadataAndAnnotations(item)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	annotations := metadata.GetAnnotations()
-	if annotations == nil {
-		annotations = make(map[string]string)
-	}
-
-	client, err := clients.NewDiscoveryClient()
-	if err != nil {
-		return nil, nil, err
-	}
-	version, err := client.ServerVersion()
-	if err != nil {
-		return nil, nil, err
-	}
-	if strings.HasSuffix(version.Minor, "+") {
-		version.Minor = strings.TrimSuffix(version.Minor, "+")
-	}
+	version, err := getVersion()
 
 	annotations[BackupServerVersion] = fmt.Sprintf("%v.%v", version.Major, version.Minor)
 	registryHostname, err := getRegistryInfo(version.Major, version.Minor)

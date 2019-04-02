@@ -1041,7 +1041,7 @@
   version = "kubernetes-1.12.0"
 
 [[projects]]
-  digest = "1:ebf00a2fff79f1dea4e62a0a29e37a7d28d222ccb0edcaf8618d7dcbbbaab3da"
+  digest = "1:ec8669e2077877201abdb59da0e0041d0a11c1f2405ff2d3bc2ae68f00928bc2"
   name = "k8s.io/client-go"
   packages = [
     "discovery",
@@ -1065,8 +1065,8 @@
     "util/integer",
   ]
   pruneopts = "NUT"
-  revision = "1638f8970cefaa404ff3a62950f88b08292b2696"
-  version = "v9.0.0"
+  revision = "701b913670036511e3d752318272c97f1a2a2edd"
+  version = "kubernetes-1.12.5"
 
 [solve-meta]
   analyzer-name = "dep"

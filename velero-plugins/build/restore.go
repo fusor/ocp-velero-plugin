@@ -48,19 +48,18 @@ func (p *RestorePlugin) Execute(input *velero.RestoreItemActionExecuteInput) (*v
 	p.Log.Info(fmt.Sprintf("Found new dockercfg secret: %v", secret))
 	build = createNewPushSecret(build, secret)
 
-	// Swap out stale imageRefs
-	// TEMP: Getting registry information dynamically because annotations do not exist
-	version, err := common.GetServerVersion()
-	if err != nil {
-		p.Log.Error("Error getting server version: ", err)
+	registry := build.Annotations[common.RestoreRegistryHostname]
+	if registry == "" {
+		err = fmt.Errorf("failed to find restore registry annotation")
 		return nil, err
 	}
-	registry, err := common.GetRegistryInfo(version.Major, version.Minor)
-	if err != nil {
-		p.Log.Error("Error getting registry information: ", err)
-		return nil, err
-	}
+	// Skip if not internal build
 	name := build.Spec.Strategy.SourceStrategy.From.Name
+	if !strings.HasPrefix(name, build.Annotations[common.BackupRegistryHostname]) {
+		// Does not have internal registry hostname, skip
+		err = fmt.Errorf("build is not from internal image, skipping")
+		return nil, err
+	}
 	shaSplit := strings.Split(name, "@")
 	if len(shaSplit) < 2 {
 		err = fmt.Errorf("unexpected image reference [%v]", name)
@@ -73,12 +72,22 @@ func (p *RestorePlugin) Execute(input *velero.RestoreItemActionExecuteInput) (*v
 		return nil, err
 	}
 	namespacedName := splitName[len(splitName)-2:]
-	newName := fmt.Sprintf("%s/%s/%s@%s", registry, namespacedName[0], namespacedName[1], sha)
+	var newName string
+	if namespacedName[0] == "openshift" {
+		// This is a default imagestream/image from existing cluster
+		// Do NOT assume the same sha exists and use floating tag instead
+		newName = fmt.Sprintf("%s/%s/%s", registry, namespacedName[0], namespacedName[1])
+	} else {
+		newName = fmt.Sprintf("%s/%s/%s@%s", registry, namespacedName[0], namespacedName[1], sha)
+	}
 
 	// Replace all imageRefs
+	// This is safe because findBuilderDockercfgSecret will skip the build
+	// if it is not sourceBuildStrategyType
 	build.Spec.Strategy.SourceStrategy.From.Name = newName
 	for _, trigger := range build.Spec.TriggeredBy {
 		trigger.ImageChangeBuild.FromRef.Name = newName
+		trigger.ImageChangeBuild.ImageID = newName
 	}
 
 	var out map[string]interface{}

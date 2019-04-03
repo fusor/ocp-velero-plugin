@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/fusor/ocp-velero-plugin/velero-plugins/common"
-        "github.com/heptio/velero/pkg/plugin/velero"
+	"github.com/heptio/velero/pkg/plugin/velero"
 	imagev1API "github.com/openshift/api/image/v1"
 	"github.com/sirupsen/logrus"
 )
@@ -26,12 +26,12 @@ func (p *RestorePlugin) AppliesTo() (velero.ResourceSelector, error) {
 
 // Execute copies local registry images from migration registry into target cluster local registry
 func (p *RestorePlugin) Execute(input *velero.RestoreItemActionExecuteInput) (*velero.RestoreItemActionExecuteOutput, error) {
-	p.Log.Info("Hello from ImageStream RestorePlugin!")
+	p.Log.Info("[is-restore] Hello from ImageStream RestorePlugin!")
 
 	imageStream := imagev1API.ImageStream{}
 	itemMarshal, _ := json.Marshal(input.Item)
 	json.Unmarshal(itemMarshal, &imageStream)
-	p.Log.Info(fmt.Sprintf("image: %#v", imageStream))
+	p.Log.Info(fmt.Sprintf("[is-restore] image: %#v", imageStream.Name))
 	annotations := imageStream.Annotations
 	if annotations == nil {
 		annotations = make(map[string]string)
@@ -53,15 +53,15 @@ func (p *RestorePlugin) Execute(input *velero.RestoreItemActionExecuteInput) (*v
 	if len(migrationRegistry) == 0 {
 		return nil, errors.New("migration registry not found for annotation \"openshift.io/migration\"")
 	}
-	p.Log.Info(fmt.Sprintf("backup internal registry: %#v", backupInternalRegistry))
-	p.Log.Info(fmt.Sprintf("restore internal registry: %#v", internalRegistry))
+	p.Log.Info(fmt.Sprintf("[is-restore] backup internal registry: %#v", backupInternalRegistry))
+	p.Log.Info(fmt.Sprintf("[is-restore] restore internal registry: %#v", internalRegistry))
 
 	for _, tag := range imageStreamUnmodified.Status.Tags {
-		p.Log.Info(fmt.Sprintf("Restoring tag: %#v", tag.Tag))
+		p.Log.Info(fmt.Sprintf("[is-restore] Restoring tag: %#v", tag.Tag))
 		specTag := findSpecTag(imageStreamUnmodified.Spec.Tags, tag.Tag)
 		copyToTag := true
 		if specTag != nil && specTag.From != nil {
-			p.Log.Info(fmt.Sprintf("image tagged: %s, %s", specTag.From.Kind, specTag.From.Name))
+			p.Log.Info(fmt.Sprintf("[is-restore] image tagged: %s, %s", specTag.From.Kind, specTag.From.Name))
 			// we have a tag.
 			copyToTag = false
 		}
@@ -69,25 +69,25 @@ func (p *RestorePlugin) Execute(input *velero.RestoreItemActionExecuteInput) (*v
 		for i := len(tag.Items) - 1; i >= 0; i-- {
 			dockerImageReference := tag.Items[i].DockerImageReference
 			if strings.HasPrefix(dockerImageReference, backupInternalRegistry) {
-				destTag := "@" + tag.Items[i].Image
+				destTag := ""
 				if copyToTag {
 					destTag = ":" + tag.Tag
 				}
 				srcPath := fmt.Sprintf("docker://%s/%s/%s@%s", migrationRegistry, imageStreamUnmodified.Namespace, imageStreamUnmodified.Name, tag.Items[i].Image)
 				destPath := fmt.Sprintf("docker://%s/%s/%s%s", internalRegistry, imageStreamUnmodified.Namespace, imageStreamUnmodified.Name, destTag)
 
-				p.Log.Info(fmt.Sprintf("copying from: %s", srcPath))
-				p.Log.Info(fmt.Sprintf("copying to: %s", destPath))
+				p.Log.Info(fmt.Sprintf("[is-restore] copying from: %s", srcPath))
+				p.Log.Info(fmt.Sprintf("[is-restore] copying to: %s", destPath))
 				manifest, err := copyImageRestore(srcPath, destPath)
 				if err != nil {
+					p.Log.Info(fmt.Sprintf("[is-restore] Error copying image: %v", err))
 					return nil, err
 				}
-				p.Log.Info(fmt.Sprintf("manifest of copied image: %s", manifest))
+				p.Log.Info(fmt.Sprintf("[is-restore] manifest of copied image: %s", manifest))
 			}
 		}
 	}
 
-	imageStream.Annotations = annotations
 	var out map[string]interface{}
 	objrec, _ := json.Marshal(imageStream)
 	json.Unmarshal(objrec, &out)

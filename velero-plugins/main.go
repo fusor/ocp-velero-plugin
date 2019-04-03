@@ -4,6 +4,7 @@ import (
 	"github.com/fusor/ocp-velero-plugin/velero-plugins/build"
 	"github.com/fusor/ocp-velero-plugin/velero-plugins/common"
 	"github.com/fusor/ocp-velero-plugin/velero-plugins/imagestream"
+	"github.com/fusor/ocp-velero-plugin/velero-plugins/pv"
 	"github.com/fusor/ocp-velero-plugin/velero-plugins/route"
 	veleroplugin "github.com/heptio/velero/pkg/plugin/framework"
 	"github.com/sirupsen/logrus"
@@ -13,6 +14,7 @@ func main() {
 	veleroplugin.NewServer().
 		RegisterBackupItemAction("common-backup-plugin", newCommonBackupPlugin).
 		RegisterRestoreItemAction("common-restore-plugin", newCommonRestorePlugin).
+		RegisterBackupItemAction("pv-backup-plugin", newPVBackupPlugin).
 		RegisterBackupItemAction("is-backup-plugin", newImageStreamBackupPlugin).
 		RegisterRestoreItemAction("is-restore-plugin", newImageStreamRestorePlugin).
 		RegisterRestoreItemAction("route-restore-plugin", newRouteRestorePlugin).
@@ -42,4 +44,8 @@ func newCommonBackupPlugin(logger logrus.FieldLogger) (interface{}, error) {
 
 func newCommonRestorePlugin(logger logrus.FieldLogger) (interface{}, error) {
 	return &common.RestorePlugin{Log: logger}, nil
+}
+
+func newPVBackupPlugin(logger logrus.FieldLogger) (interface{}, error) {
+	return &pv.BackupPlugin{Log: logger}, nil
 }

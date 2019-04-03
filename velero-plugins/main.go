@@ -13,14 +13,14 @@ import (
 
 func main() {
 	veleroplugin.NewServer().
-		RegisterBackupItemAction("common-backup-plugin", newCommonBackupPlugin).
-		RegisterRestoreItemAction("common-restore-plugin", newCommonRestorePlugin).
-		RegisterBackupItemAction("pv-backup-plugin", newPVBackupPlugin).
-		RegisterBackupItemAction("is-backup-plugin", newImageStreamBackupPlugin).
-		RegisterRestoreItemAction("is-restore-plugin", newImageStreamRestorePlugin).
-		RegisterRestoreItemAction("imagestreamtag-restore-plugin", newImageStreamTagRestorePlugin).
-		RegisterRestoreItemAction("route-restore-plugin", newRouteRestorePlugin).
-		RegisterRestoreItemAction("build-restore-plugin", newBuildRestorePlugin).
+		RegisterBackupItemAction("01-common-backup-plugin", newCommonBackupPlugin).
+		RegisterRestoreItemAction("01-common-restore-plugin", newCommonRestorePlugin).
+		RegisterBackupItemAction("02-pv-backup-plugin", newPVBackupPlugin).
+		RegisterBackupItemAction("03-is-backup-plugin", newImageStreamBackupPlugin).
+		RegisterRestoreItemAction("03-is-restore-plugin", newImageStreamRestorePlugin).
+		RegisterRestoreItemAction("04-imagestreamtag-restore-plugin", newImageStreamTagRestorePlugin).
+		RegisterRestoreItemAction("05-route-restore-plugin", newRouteRestorePlugin).
+		RegisterRestoreItemAction("06-build-restore-plugin", newBuildRestorePlugin).
 		Serve()
 }
 

@@ -14,7 +14,7 @@ import (
 	"k8s.io/apimachinery/pkg/version"
 )
 
-func getRegistryInfo(major, minor string) (string, error) {
+func GetRegistryInfo(major, minor string) (string, error) {
 	if major != "1" {
 		return "", fmt.Errorf("server version %v.%v not supported. Must be 1.x", major, minor)
 	}
@@ -68,7 +68,7 @@ func getMetadataAndAnnotations(item runtime.Unstructured) (metav1.Object, map[st
 	return metadata, annotations, nil
 }
 
-func getVersion() (*version.Info, error) {
+func GetServerVersion() (*version.Info, error) {
 	client, err := clients.NewDiscoveryClient()
 	if err != nil {
 		return nil, err

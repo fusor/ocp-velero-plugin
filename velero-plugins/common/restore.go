@@ -28,10 +28,13 @@ func (p *RestorePlugin) Execute(input *velero.RestoreItemActionExecuteInput) (*v
 	name := metadata.GetName()
 	p.Log.Infof("common restore plugin for %s", name)
 
-	version, err := getVersion()
+	version, err := GetServerVersion()
+	if err != nil {
+		return nil, err
+	}
 
 	annotations[RestoreServerVersion] = fmt.Sprintf("%v.%v", version.Major, version.Minor)
-	registryHostname, err := getRegistryInfo(version.Major, version.Minor)
+	registryHostname, err := GetRegistryInfo(version.Major, version.Minor)
 	if err != nil {
 		return nil, err
 	}

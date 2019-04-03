@@ -25,6 +25,8 @@ func (p *RestorePlugin) Execute(input *velero.RestoreItemActionExecuteInput) (*v
 	if err != nil {
 		return nil, err
 	}
+	name := metadata.GetName()
+	p.Log.Infof("common restore plugin for %s", name)
 
 	version, err := getVersion()
 

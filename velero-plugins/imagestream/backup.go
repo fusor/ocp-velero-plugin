@@ -30,12 +30,12 @@ func (p *BackupPlugin) AppliesTo() (velero.ResourceSelector, error) {
 
 // Execute copies local registry images into migration registry
 func (p *BackupPlugin) Execute(item runtime.Unstructured, backup *v1.Backup) (runtime.Unstructured, []velero.ResourceIdentifier, error) {
-	p.Log.Info("Hello from Imagestream backup plugin!!")
+	p.Log.Info("[is-backup] Hello from Imagestream backup plugin!!")
 
 	im := imagev1API.ImageStream{}
 	itemMarshal, _ := json.Marshal(item)
 	json.Unmarshal(itemMarshal, &im)
-	p.Log.Info(fmt.Sprintf("image: %#v", im))
+	p.Log.Info(fmt.Sprintf("[is-backup] image: %#v", im))
 	annotations := im.Annotations
 	if annotations == nil {
 		annotations = make(map[string]string)
@@ -49,25 +49,16 @@ func (p *BackupPlugin) Execute(item runtime.Unstructured, backup *v1.Backup) (ru
 	if len(migrationRegistry) == 0 {
 		return nil, nil, errors.New("migration registry not found for annotation \"openshift.io/migration\"")
 	}
-	p.Log.Info(fmt.Sprintf("internal registry: %#v", internalRegistry))
+	p.Log.Info(fmt.Sprintf("[is-backup] internal registry: %#v", internalRegistry))
 
 	localImageCopied := false
 	localImageCopiedByTag := false
 	for _, tag := range im.Status.Tags {
-		p.Log.Info(fmt.Sprintf("Backing up tag: %#v", tag.Tag))
-		// FIXME: remove this comment once the below logic is implemented in the other plugins
-		// in imagestreamtag restore plugin: restore if not local || has a tag reference
-		// in imagestream backup plugin: copy all local images image (reverse order per tag):
-		//                                1) if tag has null tag reference, copy to dest:tag
-		//                                2) if there is a tag reference, copy to dest@sha
-		// in imagestream restore plugin: copy all local images image (reverse order per tag):
-		//                                1) if tag has null tag reference, copy to dest:tag
-		//                                2) if there is a tag reference, copy to dest@sha
-		//                                restore imagestream if no local images copied via dest tag
+		p.Log.Info(fmt.Sprintf("[is-backup] Backing up tag: %#v", tag.Tag))
 		specTag := findSpecTag(im.Spec.Tags, tag.Tag)
 		copyToTag := true
 		if specTag != nil && specTag.From != nil {
-			p.Log.Info(fmt.Sprintf("image tagged: %s, %s", specTag.From.Kind, specTag.From.Name))
+			p.Log.Info(fmt.Sprintf("[is-backup] image tagged: %s, %s", specTag.From.Kind, specTag.From.Name))
 			// we have a tag.
 			copyToTag = false
 		}
@@ -76,21 +67,22 @@ func (p *BackupPlugin) Execute(item runtime.Unstructured, backup *v1.Backup) (ru
 			dockerImageReference := tag.Items[i].DockerImageReference
 			if strings.HasPrefix(dockerImageReference, internalRegistry) {
 				localImageCopied = true
-				destTag := "@" + tag.Items[i].Image
+				destTag := ""
 				if copyToTag {
 					localImageCopiedByTag = true
 					destTag = ":" + tag.Tag
 				}
 				srcPath := fmt.Sprintf("docker://%s", dockerImageReference)
 				destPath := fmt.Sprintf("docker://%s/%s/%s%s", migrationRegistry, im.Namespace, im.Name, destTag)
-				p.Log.Info(fmt.Sprintf("copying from: %s", srcPath))
-				p.Log.Info(fmt.Sprintf("copying to: %s", destPath))
+				p.Log.Info(fmt.Sprintf("[is-backup] copying from: %s", srcPath))
+				p.Log.Info(fmt.Sprintf("[is-backup] copying to: %s", destPath))
 
 				manifest, err := copyImageBackup(srcPath, destPath)
 				if err != nil {
+					p.Log.Info(fmt.Sprintf("[is-backup] Error copying image: %v", err))
 					return nil, nil, err
 				}
-				p.Log.Info(fmt.Sprintf("manifest of copied image: %s", manifest))
+				p.Log.Info(fmt.Sprintf("[is-backup] manifest of copied image: %s", manifest))
 			}
 		}
 	}

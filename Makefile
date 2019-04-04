@@ -34,9 +34,6 @@ build: _output/$(BIN)
 _output/$(BIN): $(BIN)/*.go
 	mkdir -p .go/src/$(REPO) .go/pkg .go/std/$(ARCH) _output
 	cp -rp * .go/src/$(REPO)
-# The patch and mv below is needed until https://github.com/containers/storage/pull/309 is merged and vendor/ is updated with the fix
-	test ! -e .go/src/$(REPO)/vendor/github.com/containers/storage/drivers/copy/copy_unsupported.go && patch  -p0 -d .go/src/$(REPO) < copy_cgo.patch || true
-	mv .go/src/$(REPO)/vendor/github.com/containers/storage/drivers/copy/copy.go .go/src/$(REPO)/vendor/github.com/containers/storage/drivers/copy/copy_linux.go || true
 	docker run \
 				 --rm \
 				 -u $$(id -u):$$(id -g) \

@@ -121,7 +121,7 @@
   version = "v1.5.1"
 
 [[projects]]
-  digest = "1:174544223c7e10f71f534ec806b696c3d6de64e8bc33e7cab7a43968445186aa"
+  digest = "1:457b0956432ff0a3c6b583f854653139202a27f81894847c6c23ee6d08b6a5ac"
   name = "github.com/containers/storage"
   packages = [
     ".",
@@ -164,8 +164,7 @@
     "pkg/truncindex",
   ]
   pruneopts = "NUT"
-  revision = "f17e56f52a9caa3dd8c7d08466f8bc1451eeae00"
-  version = "v1.12.1"
+  revision = "ea57ed3a133ca22a1b3033b212e849efc13fe21f"
 
 [[projects]]
   digest = "1:ffe9824d294da03b391f44e1ae8281281b4afc1bdaa9588c9097785e3af10cec"
@@ -1093,6 +1092,7 @@
     "k8s.io/apimachinery/pkg/apis/meta/v1",
     "k8s.io/apimachinery/pkg/apis/meta/v1/unstructured",
     "k8s.io/apimachinery/pkg/runtime",
+    "k8s.io/apimachinery/pkg/version",
     "k8s.io/client-go/discovery",
     "k8s.io/client-go/kubernetes/typed/core/v1",
     "k8s.io/client-go/rest",

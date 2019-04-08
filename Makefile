@@ -32,7 +32,7 @@ build-%:
 build: _output/$(BIN)
 
 _output/$(BIN): $(BIN)/*.go
-	mkdir -p .go/src/$(REPO) .go/pkg .go/std/$(ARCH) _output
+	mkdir -p .go/src/$(REPO) .go/pkg .go/.cache .go/std/$(ARCH) _output
 	cp -rp * .go/src/$(REPO)
 	docker run \
 				 --rm \
@@ -40,6 +40,7 @@ _output/$(BIN): $(BIN)/*.go
 				 -v $$(pwd)/.go/pkg:/go/pkg \
 				 -v $$(pwd)/.go/src:/go/src \
 				 -v $$(pwd)/.go/std:/go/std \
+				 -v $$(pwd)/.go/.cache:/go/.cache \
 				 -v $$(pwd)/_output:/go/src/$(REPO)/_output \
 				 -v $$(pwd)/.go/std/$(ARCH):/usr/local/go/pkg/linux_$(ARCH)_static \
 				 -e CGO_ENABLED=0 \

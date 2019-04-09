@@ -9,8 +9,30 @@ import (
 	"k8s.io/client-go/rest"
 )
 
-// NewCoreClient returns a kubernetes CoreV1Client
-func NewCoreClient() (*corev1.CoreV1Client, error) {
+var coreClient *corev1.CoreV1Client
+var coreClientError error
+
+var imageClient *imagev1.ImageV1Client
+var imageClientError error
+
+var discoveryClient *discovery.DiscoveryClient
+var discoveryClientError error
+
+var routeClient *routev1.RouteV1Client
+var routeClientError error
+
+var buildClient *buildv1.BuildV1Client
+var buildClientError error
+
+// CoreClient returns a kubernetes CoreV1Client
+func CoreClient() (*corev1.CoreV1Client, error) {
+	if coreClient == nil && coreClientError == nil {
+		coreClient, coreClientError = newCoreClient()
+	}
+	return coreClient, coreClientError
+}
+
+func newCoreClient() (*corev1.CoreV1Client, error) {
 	config, err := rest.InClusterConfig()
 	if err != nil {
 		return nil, err
@@ -22,8 +44,15 @@ func NewCoreClient() (*corev1.CoreV1Client, error) {
 	return client, nil
 }
 
-// NewImageClient returns an openshift ImageV1Client
-func NewImageClient() (*imagev1.ImageV1Client, error) {
+// ImageClient returns an openshift ImageV1Client
+func ImageClient() (*imagev1.ImageV1Client, error) {
+	if imageClient == nil && imageClientError == nil {
+		imageClient, imageClientError = newImageClient()
+	}
+	return imageClient, imageClientError
+}
+
+func newImageClient() (*imagev1.ImageV1Client, error) {
 	config, err := rest.InClusterConfig()
 	if err != nil {
 		return nil, err
@@ -35,8 +64,15 @@ func NewImageClient() (*imagev1.ImageV1Client, error) {
 	return client, nil
 }
 
-// NewDiscoveryClient returns a client-go DiscoveryClient
-func NewDiscoveryClient() (*discovery.DiscoveryClient, error) {
+// DiscoveryClient returns a client-go DiscoveryClient
+func DiscoveryClient() (*discovery.DiscoveryClient, error) {
+	if discoveryClient == nil && discoveryClientError == nil {
+		discoveryClient, discoveryClientError = newDiscoveryClient()
+	}
+	return discoveryClient, discoveryClientError
+}
+
+func newDiscoveryClient() (*discovery.DiscoveryClient, error) {
 	config, err := rest.InClusterConfig()
 	if err != nil {
 		return nil, err
@@ -48,8 +84,15 @@ func NewDiscoveryClient() (*discovery.DiscoveryClient, error) {
 	return client, nil
 }
 
-// NewRouteClient returns an openshift RouteV1Client
-func NewRouteClient() (*routev1.RouteV1Client, error) {
+// RouteClient returns an openshift RouteV1Client
+func RouteClient() (*routev1.RouteV1Client, error) {
+	if routeClient == nil && routeClientError == nil {
+		routeClient, routeClientError = newRouteClient()
+	}
+	return routeClient, routeClientError
+}
+
+func newRouteClient() (*routev1.RouteV1Client, error) {
 	config, err := rest.InClusterConfig()
 	if err != nil {
 		return nil, err
@@ -61,8 +104,15 @@ func NewRouteClient() (*routev1.RouteV1Client, error) {
 	return client, nil
 }
 
-// NewBuildClient returns an openshift BuildV1Client
-func NewBuildClient() (*buildv1.BuildV1Client, error) {
+// BuildClient returns an openshift BuildV1Client
+func BuildClient() (*buildv1.BuildV1Client, error) {
+	if buildClient == nil && buildClientError == nil {
+		buildClient, buildClientError = newBuildClient()
+	}
+	return buildClient, buildClientError
+}
+
+func newBuildClient() (*buildv1.BuildV1Client, error) {
 	config, err := rest.InClusterConfig()
 	if err != nil {
 		return nil, err
@@ -72,4 +122,12 @@ func NewBuildClient() (*buildv1.BuildV1Client, error) {
 		return nil, err
 	}
 	return client, nil
+}
+
+func init() {
+	coreClient, coreClientError = nil, nil
+	imageClient, imageClientError = nil, nil
+	discoveryClient, discoveryClientError = nil, nil
+	routeClient, routeClientError = nil, nil
+	buildClient, buildClientError = nil, nil
 }

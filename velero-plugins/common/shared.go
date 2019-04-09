@@ -23,7 +23,7 @@ func GetRegistryInfo(major, minor string) (string, error) {
 		return "", fmt.Errorf("server minor version %v invalid value: %v", minor, err)
 	}
 
-	cClient, err := clients.NewCoreClient()
+	cClient, err := clients.CoreClient()
 	if err != nil {
 		return "", err
 	}
@@ -69,7 +69,7 @@ func getMetadataAndAnnotations(item runtime.Unstructured) (metav1.Object, map[st
 }
 
 func GetServerVersion() (*version.Info, error) {
-	client, err := clients.NewDiscoveryClient()
+	client, err := clients.DiscoveryClient()
 	if err != nil {
 		return nil, err
 	}

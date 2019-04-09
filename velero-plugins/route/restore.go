@@ -32,7 +32,7 @@ func (p *RestorePlugin) Execute(input *velero.RestoreItemActionExecuteInput) (*v
 	itemMarshal, _ := json.Marshal(input.Item)
 	json.Unmarshal(itemMarshal, &route)
 
-	client, err := clients.NewCoreClient()
+	client, err := clients.CoreClient()
 	if err != nil {
 		return nil, err
 	}

@@ -65,7 +65,7 @@ func (p *RestorePlugin) Execute(input *velero.RestoreItemActionExecuteInput) (*v
 				refNamespace = imageStreamTag.Tag.From.Namespace
 			}
 			p.Log.Info(fmt.Sprintf("[istag-restore] Looking up reference tag: %s/%s", refNamespace, imageStreamTag.Tag.From.Name))
-			client, err := clients.NewImageClient()
+			client, err := clients.ImageClient()
 			_, err = client.ImageStreamTags(refNamespace).Get(imageStreamTag.Tag.From.Name, metav1.GetOptions{})
 			if err == nil {
 				p.Log.Info("[istag-restore] reference tag found in cluster")

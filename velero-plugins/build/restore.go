@@ -102,7 +102,7 @@ func (p *RestorePlugin) findBuilderDockercfgSecret(build buildv1API.Build) (stri
 		return "", errors.New("No source build strategy type found")
 	}
 
-	client, err := clients.NewCoreClient()
+	client, err := clients.CoreClient()
 	if err != nil {
 		return "", err
 	}

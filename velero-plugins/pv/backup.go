@@ -34,7 +34,7 @@ func (p *BackupPlugin) Execute(item runtime.Unstructured, backup *v1.Backup) (ru
 	itemMarshal, _ := json.Marshal(item)
 	json.Unmarshal(itemMarshal, &backupPV)
 
-	client, err := clients.NewCoreClient()
+	client, err := clients.CoreClient()
 	if err != nil {
 		return nil, nil, err
 	}

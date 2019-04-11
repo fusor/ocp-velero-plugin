@@ -5,6 +5,7 @@ import (
 	"github.com/fusor/ocp-velero-plugin/velero-plugins/common"
 	"github.com/fusor/ocp-velero-plugin/velero-plugins/imagestream"
 	"github.com/fusor/ocp-velero-plugin/velero-plugins/imagestreamtag"
+	"github.com/fusor/ocp-velero-plugin/velero-plugins/pod"
 	"github.com/fusor/ocp-velero-plugin/velero-plugins/pv"
 	"github.com/fusor/ocp-velero-plugin/velero-plugins/route"
 	veleroplugin "github.com/heptio/velero/pkg/plugin/framework"
@@ -21,6 +22,7 @@ func main() {
 		RegisterRestoreItemAction("04-imagestreamtag-restore-plugin", newImageStreamTagRestorePlugin).
 		RegisterRestoreItemAction("05-route-restore-plugin", newRouteRestorePlugin).
 		RegisterRestoreItemAction("06-build-restore-plugin", newBuildRestorePlugin).
+		RegisterRestoreItemAction("07-pod-restore-plugin", newPodRestorePlugin).
 		Serve()
 }
 
@@ -50,6 +52,10 @@ func newCommonBackupPlugin(logger logrus.FieldLogger) (interface{}, error) {
 
 func newCommonRestorePlugin(logger logrus.FieldLogger) (interface{}, error) {
 	return &common.RestorePlugin{Log: logger}, nil
+}
+
+func newPodRestorePlugin(logger logrus.FieldLogger) (interface{}, error) {
+	return &pod.RestorePlugin{Log: logger}, nil
 }
 
 func newPVBackupPlugin(logger logrus.FieldLogger) (interface{}, error) {

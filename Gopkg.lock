@@ -562,9 +562,10 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:8de13d876987355d58a3f7a02f395a1eee5a4b4a27399939482218bbbbde0db8"
+  digest = "1:3500b1bc488cc4e084affff2fb790194310fac59bff4625adb2a0e937b1b27c9"
   name = "github.com/openshift/api"
   packages = [
+    "apps/v1",
     "build/v1",
     "image/docker10",
     "image/dockerpre012",
@@ -1078,6 +1079,7 @@
     "github.com/heptio/velero/pkg/apis/velero/v1",
     "github.com/heptio/velero/pkg/plugin/framework",
     "github.com/heptio/velero/pkg/plugin/velero",
+    "github.com/openshift/api/apps/v1",
     "github.com/openshift/api/build/v1",
     "github.com/openshift/api/image/v1",
     "github.com/openshift/api/route/v1",
@@ -1092,6 +1094,7 @@
     "k8s.io/apimachinery/pkg/apis/meta/v1",
     "k8s.io/apimachinery/pkg/apis/meta/v1/unstructured",
     "k8s.io/apimachinery/pkg/runtime",
+    "k8s.io/apimachinery/pkg/runtime/schema",
     "k8s.io/apimachinery/pkg/version",
     "k8s.io/client-go/discovery",
     "k8s.io/client-go/kubernetes/typed/core/v1",

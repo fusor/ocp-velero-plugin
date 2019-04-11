@@ -6,6 +6,9 @@ import (
 
 	"github.com/sirupsen/logrus"
 	corev1API "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/meta"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 )
 
 // ReplaceImageRefPrefix replaces an image reference prefix with newPrefix.
@@ -72,7 +75,7 @@ func ParseLocalImageReference(s, prefix string) (*LocalImageReference, error) {
 
 // SwapContainerImageRefs updates internal image references from
 // backup registry to restore registry pathnames
-func SwapContainerImageRefs (containers []corev1API.Container, oldRegistry, newRegistry string, log logrus.FieldLogger) {
+func SwapContainerImageRefs(containers []corev1API.Container, oldRegistry, newRegistry string, log logrus.FieldLogger) {
 	for n, container := range containers {
 		imageRef := container.Image
 		log.Infof("[util] container image ref %s", imageRef)
@@ -84,4 +87,30 @@ func SwapContainerImageRefs (containers []corev1API.Container, oldRegistry, newR
 		}
 	}
 
+}
+
+//
+func GetSrcAndDestRegistryInfo(item runtime.Unstructured) (string, string, error) {
+	_, annotations, err := getMetadataAndAnnotations(item)
+	if err != nil {
+		return "", "", err
+	}
+	backupRegistry := annotations[BackupRegistryHostname]
+	if backupRegistry == "" {
+		return "", "", fmt.Errorf("failed to find backup registry annotation")
+	}
+	restoreRegistry := annotations[RestoreRegistryHostname]
+	if restoreRegistry == "" {
+		return "", "", fmt.Errorf("failed to find restore registry annotation")
+	}
+	return backupRegistry, restoreRegistry, nil
+}
+
+// GetOwnerReferences returns the array of OwnerReferences associated with the resource
+func GetOwnerReferences(item runtime.Unstructured) ([]metav1.OwnerReference, error) {
+	metadata, err := meta.Accessor(item)
+	if err != nil {
+		return nil, err
+	}
+	return metadata.GetOwnerReferences(), nil
 }

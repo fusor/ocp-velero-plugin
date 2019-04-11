@@ -37,6 +37,14 @@ func (p *RestorePlugin) Execute(input *velero.RestoreItemActionExecuteInput) (*v
 	if registry == "" {
 		return nil, fmt.Errorf("failed to find restore registry annotation")
 	}
+	ownerRefs, err := common.GetOwnerReferences(input.ItemFromBackup)
+	if err != nil {
+		return nil, err
+	}
+	if len(ownerRefs) > 0 {
+		p.Log.Infof("[pod-restore] skipping restore of pod %s, has owner references", pod.Name)
+		return velero.NewRestoreItemActionExecuteOutput(input.Item).WithoutRestore(), nil
+	}
 	common.SwapContainerImageRefs(pod.Spec.Containers, backupRegistry, registry, p.Log)
 	common.SwapContainerImageRefs(pod.Spec.InitContainers, backupRegistry, registry, p.Log)
 

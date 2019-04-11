@@ -23,3 +23,6 @@ const RestoreRegistryHostname string = "openshift.io/restore-registry-hostname"
 const MigrationRegistry string = "openshift.io/migration-registry"
 
 const SwingPVAnnotation string = "openshift.io/swing-pv"
+
+const StageAnnotation string = "openshift.io/stage-migration"
+const MigrateAnnotation string = "openshift.io/migrate-migration"

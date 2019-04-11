@@ -55,10 +55,10 @@ func (p *RestorePlugin) Execute(input *velero.RestoreItemActionExecuteInput) (*v
 	}
 	// Skip if not internal build
 	name := build.Spec.Strategy.SourceStrategy.From.Name
-	if !strings.HasPrefix(name, build.Annotations[common.BackupRegistryHostname]) {
+	if !common.HasImageRefPrefix(name, build.Annotations[common.BackupRegistryHostname]) {
 		// Does not have internal registry hostname, skip
-		err = fmt.Errorf("build is not from internal image, skipping")
-		return nil, err
+		p.Log.Errorf("build is not from internal image, skipping")
+		return velero.NewRestoreItemActionExecuteOutput(input.Item), nil
 	}
 	shaSplit := strings.Split(name, "@")
 	if len(shaSplit) < 2 {
@@ -86,7 +86,6 @@ func (p *RestorePlugin) Execute(input *velero.RestoreItemActionExecuteInput) (*v
 	// if it is not sourceBuildStrategyType
 	build.Spec.Strategy.SourceStrategy.From.Name = newName
 	for _, trigger := range build.Spec.TriggeredBy {
-		trigger.ImageChangeBuild.FromRef.Name = newName
 		trigger.ImageChangeBuild.ImageID = newName
 	}
 

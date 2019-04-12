@@ -21,22 +21,22 @@ import (
 
 func main() {
 	veleroplugin.NewServer().
-		RegisterBackupItemAction("01-common-backup-plugin", newCommonBackupPlugin).
-		RegisterRestoreItemAction("01-common-restore-plugin", newCommonRestorePlugin).
-		RegisterBackupItemAction("02-pv-backup-plugin", newPVBackupPlugin).
-		RegisterBackupItemAction("03-is-backup-plugin", newImageStreamBackupPlugin).
-		RegisterRestoreItemAction("03-is-restore-plugin", newImageStreamRestorePlugin).
-		RegisterRestoreItemAction("04-imagestreamtag-restore-plugin", newImageStreamTagRestorePlugin).
-		RegisterRestoreItemAction("05-route-restore-plugin", newRouteRestorePlugin).
-		RegisterRestoreItemAction("06-build-restore-plugin", newBuildRestorePlugin).
-		RegisterRestoreItemAction("07-pod-restore-plugin", newPodRestorePlugin).
-		RegisterRestoreItemAction("08-deploymentconfig-restore-plugin", newDeploymentConfigRestorePlugin).
-		RegisterRestoreItemAction("09-replicationcontroller-restore-plugin", newReplicationControllerRestorePlugin).
-		RegisterRestoreItemAction("10-job-restore-plugin", newJobRestorePlugin).
-		RegisterRestoreItemAction("11-daemonset-restore-plugin", newDaemonSetRestorePlugin).
-		RegisterRestoreItemAction("12-replicaset-restore-plugin", newReplicaSetRestorePlugin).
-		RegisterRestoreItemAction("13-deployment-restore-plugin", newDeploymentRestorePlugin).
-		RegisterRestoreItemAction("14-statefulset-restore-plugin", newStatefulSetRestorePlugin).
+		RegisterBackupItemAction("openshift.io/01-common-backup-plugin", newCommonBackupPlugin).
+		RegisterRestoreItemAction("openshift.io/01-common-restore-plugin", newCommonRestorePlugin).
+		RegisterBackupItemAction("openshift.io/02-pv-backup-plugin", newPVBackupPlugin).
+		RegisterBackupItemAction("openshift.io/03-is-backup-plugin", newImageStreamBackupPlugin).
+		RegisterRestoreItemAction("openshift.io/03-is-restore-plugin", newImageStreamRestorePlugin).
+		RegisterRestoreItemAction("openshift.io/04-imagestreamtag-restore-plugin", newImageStreamTagRestorePlugin).
+		RegisterRestoreItemAction("openshift.io/05-route-restore-plugin", newRouteRestorePlugin).
+		RegisterRestoreItemAction("openshift.io/06-build-restore-plugin", newBuildRestorePlugin).
+		RegisterRestoreItemAction("openshift.io/07-pod-restore-plugin", newPodRestorePlugin).
+		RegisterRestoreItemAction("openshift.io/08-deploymentconfig-restore-plugin", newDeploymentConfigRestorePlugin).
+		RegisterRestoreItemAction("openshift.io/09-replicationcontroller-restore-plugin", newReplicationControllerRestorePlugin).
+		RegisterRestoreItemAction("openshift.io/10-job-restore-plugin", newJobRestorePlugin).
+		RegisterRestoreItemAction("openshift.io/11-daemonset-restore-plugin", newDaemonSetRestorePlugin).
+		RegisterRestoreItemAction("openshift.io/12-replicaset-restore-plugin", newReplicaSetRestorePlugin).
+		RegisterRestoreItemAction("openshift.io/13-deployment-restore-plugin", newDeploymentRestorePlugin).
+		RegisterRestoreItemAction("openshift.io/14-statefulset-restore-plugin", newStatefulSetRestorePlugin).
 		Serve()
 }
 

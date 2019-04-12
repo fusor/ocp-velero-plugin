@@ -48,7 +48,7 @@ func (s *RestoreItemActionGRPCServer) getImpl(name string) (velero.RestoreItemAc
 	return itemAction, nil
 }
 
-func (s *RestoreItemActionGRPCServer) AppliesTo(ctx context.Context, req *proto.AppliesToRequest) (response *proto.AppliesToResponse, err error) {
+func (s *RestoreItemActionGRPCServer) AppliesTo(ctx context.Context, req *proto.RestoreItemActionAppliesToRequest) (response *proto.RestoreItemActionAppliesToResponse, err error) {
 	defer func() {
 		if recoveredErr := handlePanic(recover()); recoveredErr != nil {
 			err = recoveredErr
@@ -60,17 +60,19 @@ func (s *RestoreItemActionGRPCServer) AppliesTo(ctx context.Context, req *proto.
 		return nil, newGRPCError(err)
 	}
 
-	appliesTo, err := impl.AppliesTo()
+	resourceSelector, err := impl.AppliesTo()
 	if err != nil {
 		return nil, newGRPCError(err)
 	}
 
-	return &proto.AppliesToResponse{
-		IncludedNamespaces: appliesTo.IncludedNamespaces,
-		ExcludedNamespaces: appliesTo.ExcludedNamespaces,
-		IncludedResources:  appliesTo.IncludedResources,
-		ExcludedResources:  appliesTo.ExcludedResources,
-		Selector:           appliesTo.LabelSelector,
+	return &proto.RestoreItemActionAppliesToResponse{
+		&proto.ResourceSelector{
+			IncludedNamespaces: resourceSelector.IncludedNamespaces,
+			ExcludedNamespaces: resourceSelector.ExcludedNamespaces,
+			IncludedResources:  resourceSelector.IncludedResources,
+			ExcludedResources:  resourceSelector.ExcludedResources,
+			Selector:           resourceSelector.LabelSelector,
+		},
 	}, nil
 }
 
@@ -116,12 +118,10 @@ func (s *RestoreItemActionGRPCServer) Execute(ctx context.Context, req *proto.Re
 	// If the plugin implementation returned a nil updateItem (meaning no modifications), reset updatedItem to the
 	// original item.
 	var updatedItemJSON []byte
-	skipRestore := false
 	if executeOutput.UpdatedItem == nil {
 		updatedItemJSON = req.Item
 	} else {
 		updatedItemJSON, err = json.Marshal(executeOutput.UpdatedItem.UnstructuredContent())
-		skipRestore = executeOutput.SkipRestore
 		if err != nil {
 			return nil, newGRPCError(errors.WithStack(err))
 		}
@@ -129,7 +129,7 @@ func (s *RestoreItemActionGRPCServer) Execute(ctx context.Context, req *proto.Re
 
 	res := &proto.RestoreItemActionExecuteResponse{
 		Item:        updatedItemJSON,
-		SkipRestore: skipRestore,
+		SkipRestore: executeOutput.SkipRestore,
 	}
 
 	for _, item := range executeOutput.AdditionalItems {

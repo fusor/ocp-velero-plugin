@@ -386,7 +386,7 @@
 
 [[projects]]
   branch = "fusor-dev"
-  digest = "1:0fc681361bfe7d259a0ae75aef3bca0db4431e42595b0a5ecc5467c47f51b8e1"
+  digest = "1:1b0ee194f20c0cc0cd356f47ad25e60e2b1faabe39c3fb029c8c1d868ef6cc1b"
   name = "github.com/heptio/velero"
   packages = [
     "pkg/apis/velero/v1",
@@ -397,7 +397,7 @@
     "pkg/util/logging",
   ]
   pruneopts = "NUT"
-  revision = "265bccf0628507627e56f8e6bcd4bc44ae184f76"
+  revision = "3a6db53e156389045cde53bd267737e0860b2845"
   source = "github.com/fusor/velero.git"
 
 [[projects]]
@@ -1089,6 +1089,8 @@
     "github.com/sirupsen/logrus",
     "github.com/stretchr/testify/assert",
     "github.com/stretchr/testify/require",
+    "k8s.io/api/apps/v1",
+    "k8s.io/api/batch/v1",
     "k8s.io/api/core/v1",
     "k8s.io/apimachinery/pkg/api/meta",
     "k8s.io/apimachinery/pkg/apis/meta/v1",

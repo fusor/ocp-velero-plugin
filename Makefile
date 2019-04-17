@@ -37,12 +37,12 @@ _output/$(BIN): $(BIN)/*.go
 	docker run \
 				 --rm \
 				 -u $$(id -u):$$(id -g) \
-				 -v $$(pwd)/.go/pkg:/go/pkg \
-				 -v $$(pwd)/.go/src:/go/src \
-				 -v $$(pwd)/.go/std:/go/std \
-				 -v $$(pwd)/.go/.cache:/go/.cache \
-				 -v $$(pwd)/_output:/go/src/$(REPO)/_output \
-				 -v $$(pwd)/.go/std/$(ARCH):/usr/local/go/pkg/linux_$(ARCH)_static \
+				 -v $$(pwd)/.go/pkg:/go/pkg:z \
+				 -v $$(pwd)/.go/src:/go/src:z \
+				 -v $$(pwd)/.go/std:/go/std:z \
+				 -v $$(pwd)/.go/.cache:/go/.cache:z \
+				 -v $$(pwd)/_output:/go/src/$(REPO)/_output:z \
+				 -v $$(pwd)/.go/std/$(ARCH):/usr/local/go/pkg/linux_$(ARCH)_static:z \
 				 -e CGO_ENABLED=0 \
 				 -w /go/src/$(REPO) \
 				 $(BUILD_IMAGE) \

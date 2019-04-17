@@ -73,6 +73,18 @@ func ParseLocalImageReference(s, prefix string) (*LocalImageReference, error) {
 	return &parsed, nil
 }
 
+// ConfigureContainerSleep replaces the pod, cmd, and arg on containers so that
+// post stage or migrate phase 1 restores applications do not start
+func ConfigureContainerSleep(containers []corev1API.Container, duration string) {
+	for n, _ := range containers {
+		if containers[n].Name != "restic-wait" {
+			containers[n].Image = "registry.access.redhat.com/rhel7"
+			containers[n].Command = []string{"sleep"}
+			containers[n].Args = []string{duration}
+		}
+	}
+}
+
 // SwapContainerImageRefs updates internal image references from
 // backup registry to restore registry pathnames
 func SwapContainerImageRefs(containers []corev1API.Container, oldRegistry, newRegistry string, log logrus.FieldLogger) {

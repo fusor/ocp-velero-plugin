@@ -32,21 +32,29 @@ func (p *RestorePlugin) Execute(input *velero.RestoreItemActionExecuteInput) (*v
 	json.Unmarshal(itemMarshal, &pod)
 	p.Log.Infof("[pod-restore] pod: %s", pod.Name)
 
-	registry := pod.Annotations[common.RestoreRegistryHostname]
-	backupRegistry := pod.Annotations[common.BackupRegistryHostname]
-	if registry == "" {
-		return nil, fmt.Errorf("failed to find restore registry annotation")
+	if input.Restore.Annotations[common.MigrateCopyPhaseAnnotation] == "stage" {
+		common.ConfigureContainerSleep(pod.Spec.Containers, "infinity")
+		common.ConfigureContainerSleep(pod.Spec.InitContainers, "0")
+	} else if input.Restore.Annotations[common.MigrateTypeAnnotation] == "swing" ||
+		input.Restore.Annotations[common.MigrateCopyPhaseAnnotation] == "final" {
+
+		registry := pod.Annotations[common.RestoreRegistryHostname]
+		backupRegistry := pod.Annotations[common.BackupRegistryHostname]
+		if registry == "" {
+			return nil, fmt.Errorf("failed to find restore registry annotation")
+		}
+		common.SwapContainerImageRefs(pod.Spec.Containers, backupRegistry, registry, p.Log)
+		common.SwapContainerImageRefs(pod.Spec.InitContainers, backupRegistry, registry, p.Log)
+
+		ownerRefs, err := common.GetOwnerReferences(input.ItemFromBackup)
+		if err != nil {
+			return nil, err
+		}
+		if len(ownerRefs) > 0 {
+			p.Log.Infof("[pod-restore] skipping restore of pod %s, has owner references", pod.Name)
+			return velero.NewRestoreItemActionExecuteOutput(input.Item).WithoutRestore(), nil
+		}
 	}
-	ownerRefs, err := common.GetOwnerReferences(input.ItemFromBackup)
-	if err != nil {
-		return nil, err
-	}
-	if len(ownerRefs) > 0 {
-		p.Log.Infof("[pod-restore] skipping restore of pod %s, has owner references", pod.Name)
-		return velero.NewRestoreItemActionExecuteOutput(input.Item).WithoutRestore(), nil
-	}
-	common.SwapContainerImageRefs(pod.Spec.Containers, backupRegistry, registry, p.Log)
-	common.SwapContainerImageRefs(pod.Spec.InitContainers, backupRegistry, registry, p.Log)
 
 	var out map[string]interface{}
 	objrec, _ := json.Marshal(pod)

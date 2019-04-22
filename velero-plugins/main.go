@@ -11,6 +11,7 @@ import (
 	"github.com/fusor/ocp-velero-plugin/velero-plugins/job"
 	"github.com/fusor/ocp-velero-plugin/velero-plugins/pod"
 	"github.com/fusor/ocp-velero-plugin/velero-plugins/pv"
+	"github.com/fusor/ocp-velero-plugin/velero-plugins/pvc"
 	"github.com/fusor/ocp-velero-plugin/velero-plugins/replicaset"
 	"github.com/fusor/ocp-velero-plugin/velero-plugins/replicationcontroller"
 	"github.com/fusor/ocp-velero-plugin/velero-plugins/route"
@@ -24,6 +25,8 @@ func main() {
 		RegisterBackupItemAction("openshift.io/01-common-backup-plugin", newCommonBackupPlugin).
 		RegisterRestoreItemAction("openshift.io/01-common-restore-plugin", newCommonRestorePlugin).
 		RegisterBackupItemAction("openshift.io/02-pv-backup-plugin", newPVBackupPlugin).
+		RegisterRestoreItemAction("openshift.io/03-pv-restore-plugin", newPVRestorePlugin).
+		RegisterRestoreItemAction("openshift.io/03-pvc-restore-plugin", newPVCRestorePlugin).
 		RegisterBackupItemAction("openshift.io/03-is-backup-plugin", newImageStreamBackupPlugin).
 		RegisterRestoreItemAction("openshift.io/03-is-restore-plugin", newImageStreamRestorePlugin).
 		RegisterRestoreItemAction("openshift.io/04-imagestreamtag-restore-plugin", newImageStreamTagRestorePlugin).
@@ -102,4 +105,12 @@ func newStatefulSetRestorePlugin(logger logrus.FieldLogger) (interface{}, error)
 
 func newPVBackupPlugin(logger logrus.FieldLogger) (interface{}, error) {
 	return &pv.BackupPlugin{Log: logger}, nil
+}
+
+func newPVRestorePlugin(logger logrus.FieldLogger) (interface{}, error) {
+	return &pv.RestorePlugin{Log: logger}, nil
+}
+
+func newPVCRestorePlugin(logger logrus.FieldLogger) (interface{}, error) {
+	return &pvc.RestorePlugin{Log: logger}, nil
 }

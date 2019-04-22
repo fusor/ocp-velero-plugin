@@ -31,12 +31,16 @@ func (p *RestorePlugin) Execute(input *velero.RestoreItemActionExecuteInput) (*v
 	json.Unmarshal(itemMarshal, &deployment)
 	p.Log.Infof("[deployment-restore] deployment: %s", deployment.Name)
 
-	backupRegistry, registry, err := common.GetSrcAndDestRegistryInfo(input.Item)
-	if err != nil {
-		return nil, err
+	if input.Restore.Annotations[common.MigrateTypeAnnotation] == "swing" ||
+		input.Restore.Annotations[common.MigrateCopyPhaseAnnotation] == "final" {
+
+		backupRegistry, registry, err := common.GetSrcAndDestRegistryInfo(input.Item)
+		if err != nil {
+			return nil, err
+		}
+		common.SwapContainerImageRefs(deployment.Spec.Template.Spec.Containers, backupRegistry, registry, p.Log)
+		common.SwapContainerImageRefs(deployment.Spec.Template.Spec.InitContainers, backupRegistry, registry, p.Log)
 	}
-	common.SwapContainerImageRefs(deployment.Spec.Template.Spec.Containers, backupRegistry, registry, p.Log)
-	common.SwapContainerImageRefs(deployment.Spec.Template.Spec.InitContainers, backupRegistry, registry, p.Log)
 
 	var out map[string]interface{}
 	objrec, _ := json.Marshal(deployment)

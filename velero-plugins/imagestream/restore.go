@@ -37,57 +37,58 @@ func (p *RestorePlugin) Execute(input *velero.RestoreItemActionExecuteInput) (*v
 		annotations = make(map[string]string)
 	}
 
-	imageStreamUnmodified := imagev1API.ImageStream{}
-	itemMarshal, _ = json.Marshal(input.ItemFromBackup)
-	json.Unmarshal(itemMarshal, &imageStreamUnmodified)
+	if input.Restore.Annotations[common.MigrateTypeAnnotation] != "" {
+		imageStreamUnmodified := imagev1API.ImageStream{}
+		itemMarshal, _ = json.Marshal(input.ItemFromBackup)
+		json.Unmarshal(itemMarshal, &imageStreamUnmodified)
 
-	internalRegistry := annotations[common.RestoreRegistryHostname]
-	if len(internalRegistry) == 0 {
-		return nil, errors.New("restore cluster registry not found for annotation \"openshift.io/restore-registry-hostname\"")
-	}
-	backupInternalRegistry := annotations[common.BackupRegistryHostname]
-	if len(internalRegistry) == 0 {
-		return nil, errors.New("backup cluster registry not found for annotation \"openshift.io/backup-registry-hostname\"")
-	}
-	migrationRegistry := input.Restore.Annotations[common.MigrationRegistry]
-	if len(migrationRegistry) == 0 {
-		return nil, errors.New("migration registry not found for annotation \"openshift.io/migration\"")
-	}
-	p.Log.Info(fmt.Sprintf("[is-restore] backup internal registry: %#v", backupInternalRegistry))
-	p.Log.Info(fmt.Sprintf("[is-restore] restore internal registry: %#v", internalRegistry))
-
-	for _, tag := range imageStreamUnmodified.Status.Tags {
-		p.Log.Info(fmt.Sprintf("[is-restore] Restoring tag: %#v", tag.Tag))
-		specTag := findSpecTag(imageStreamUnmodified.Spec.Tags, tag.Tag)
-		copyToTag := true
-		if specTag != nil && specTag.From != nil {
-			p.Log.Info(fmt.Sprintf("[is-restore] image tagged: %s, %s", specTag.From.Kind, specTag.From.Name))
-			// we have a tag.
-			copyToTag = false
+		internalRegistry := annotations[common.RestoreRegistryHostname]
+		if len(internalRegistry) == 0 {
+			return nil, errors.New("restore cluster registry not found for annotation \"openshift.io/restore-registry-hostname\"")
 		}
-		// Iterate over items in reverse order so most recently tagged is copied last
-		for i := len(tag.Items) - 1; i >= 0; i-- {
-			dockerImageReference := tag.Items[i].DockerImageReference
-			if strings.HasPrefix(dockerImageReference, backupInternalRegistry) {
-				destTag := ""
-				if copyToTag {
-					destTag = ":" + tag.Tag
-				}
-				srcPath := fmt.Sprintf("docker://%s/%s/%s@%s", migrationRegistry, imageStreamUnmodified.Namespace, imageStreamUnmodified.Name, tag.Items[i].Image)
-				destPath := fmt.Sprintf("docker://%s/%s/%s%s", internalRegistry, imageStreamUnmodified.Namespace, imageStreamUnmodified.Name, destTag)
+		backupInternalRegistry := annotations[common.BackupRegistryHostname]
+		if len(internalRegistry) == 0 {
+			return nil, errors.New("backup cluster registry not found for annotation \"openshift.io/backup-registry-hostname\"")
+		}
+		migrationRegistry := input.Restore.Annotations[common.MigrationRegistry]
+		if len(migrationRegistry) == 0 {
+			return nil, errors.New("migration registry not found for annotation \"openshift.io/migration\"")
+		}
+		p.Log.Info(fmt.Sprintf("[is-restore] backup internal registry: %#v", backupInternalRegistry))
+		p.Log.Info(fmt.Sprintf("[is-restore] restore internal registry: %#v", internalRegistry))
 
-				p.Log.Info(fmt.Sprintf("[is-restore] copying from: %s", srcPath))
-				p.Log.Info(fmt.Sprintf("[is-restore] copying to: %s", destPath))
-				manifest, err := copyImageRestore(srcPath, destPath)
-				if err != nil {
-					p.Log.Info(fmt.Sprintf("[is-restore] Error copying image: %v", err))
-					return nil, err
+		for _, tag := range imageStreamUnmodified.Status.Tags {
+			p.Log.Info(fmt.Sprintf("[is-restore] Restoring tag: %#v", tag.Tag))
+			specTag := findSpecTag(imageStreamUnmodified.Spec.Tags, tag.Tag)
+			copyToTag := true
+			if specTag != nil && specTag.From != nil {
+				p.Log.Info(fmt.Sprintf("[is-restore] image tagged: %s, %s", specTag.From.Kind, specTag.From.Name))
+				// we have a tag.
+				copyToTag = false
+			}
+			// Iterate over items in reverse order so most recently tagged is copied last
+			for i := len(tag.Items) - 1; i >= 0; i-- {
+				dockerImageReference := tag.Items[i].DockerImageReference
+				if strings.HasPrefix(dockerImageReference, backupInternalRegistry) {
+					destTag := ""
+					if copyToTag {
+						destTag = ":" + tag.Tag
+					}
+					srcPath := fmt.Sprintf("docker://%s/%s/%s@%s", migrationRegistry, imageStreamUnmodified.Namespace, imageStreamUnmodified.Name, tag.Items[i].Image)
+					destPath := fmt.Sprintf("docker://%s/%s/%s%s", internalRegistry, imageStreamUnmodified.Namespace, imageStreamUnmodified.Name, destTag)
+
+					p.Log.Info(fmt.Sprintf("[is-restore] copying from: %s", srcPath))
+					p.Log.Info(fmt.Sprintf("[is-restore] copying to: %s", destPath))
+					manifest, err := copyImageRestore(srcPath, destPath)
+					if err != nil {
+						p.Log.Info(fmt.Sprintf("[is-restore] Error copying image: %v", err))
+						return nil, err
+					}
+					p.Log.Info(fmt.Sprintf("[is-restore] manifest of copied image: %s", manifest))
 				}
-				p.Log.Info(fmt.Sprintf("[is-restore] manifest of copied image: %s", manifest))
 			}
 		}
 	}
-
 	var out map[string]interface{}
 	objrec, _ := json.Marshal(imageStream)
 	json.Unmarshal(objrec, &out)

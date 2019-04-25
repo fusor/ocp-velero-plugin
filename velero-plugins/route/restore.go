@@ -31,26 +31,32 @@ func (p *RestorePlugin) Execute(input *velero.RestoreItemActionExecuteInput) (*v
 	route := routev1API.Route{}
 	itemMarshal, _ := json.Marshal(input.Item)
 	json.Unmarshal(itemMarshal, &route)
-
-	client, err := clients.CoreClient()
+	version, err := common.GetServerVersion()
 	if err != nil {
 		return nil, err
 	}
-	config, err := client.ConfigMaps("openshift-apiserver").Get("config", metav1.GetOptions{})
-	if err != nil {
-		return nil, err
+	if version.Major == "4" {
+		client, err := clients.NewCoreClient()
+		if err != nil {
+			return nil, err
+		}
+		config, err := client.ConfigMaps("openshift-apiserver").Get("config", metav1.GetOptions{})
+		if err != nil {
+			return nil, err
+		}
+		serverConfig := common.APIServerConfig{}
+		err = json.Unmarshal([]byte(config.Data["config.yaml"]), &serverConfig)
+		if err != nil {
+			return nil, err
+		}
+
+		subdomain := serverConfig.RoutingConfig.Subdomain
+
+		output := replaceSubdomain(input.Item, &route, subdomain)
+		return output, nil
 	}
-	serverConfig := common.APIServerConfig{}
-	err = json.Unmarshal([]byte(config.Data["config.yaml"]), &serverConfig)
-	if err != nil {
-		return nil, err
-	}
 
-	subdomain := serverConfig.RoutingConfig.Subdomain
-
-	output := replaceSubdomain(input.Item, &route, subdomain)
-
-	return output, nil
+	return nil, nil
 }
 
 func replaceSubdomain(item runtime.Unstructured, route *routev1API.Route, subdomain string) *velero.RestoreItemActionExecuteOutput {

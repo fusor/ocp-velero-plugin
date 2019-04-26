@@ -28,7 +28,7 @@ func (p *RestorePlugin) AppliesTo() (velero.ResourceSelector, error) {
 
 // Execute fixes the route path on restore to use the target cluster's domain name
 func (p *RestorePlugin) Execute(input *velero.RestoreItemActionExecuteInput) (*velero.RestoreItemActionExecuteOutput, error) {
-	p.Log.Info("Hello from Route RestorePlugin!")
+	p.Log.Info("[route-restore] Hello from Route RestorePlugin!")
 	route := routev1API.Route{}
 	itemMarshal, _ := json.Marshal(input.Item)
 	json.Unmarshal(itemMarshal, &route)
@@ -65,6 +65,7 @@ func (p *RestorePlugin) Execute(input *velero.RestoreItemActionExecuteInput) (*v
 		output := replaceSubdomain(input.Item, &route, subdomain)
 		return output, nil
 	}
+	p.Log.Info("[route-restore] Restore cluster is 3.X so skipping route subdomain replacement")
 
 	return velero.NewRestoreItemActionExecuteOutput(input.Item), nil
 }

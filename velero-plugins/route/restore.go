@@ -2,6 +2,7 @@ package route
 
 import (
 	"encoding/json"
+	"strconv"
 	"strings"
 
 	"github.com/fusor/ocp-velero-plugin/velero-plugins/clients"
@@ -27,30 +28,46 @@ func (p *RestorePlugin) AppliesTo() (velero.ResourceSelector, error) {
 
 // Execute fixes the route path on restore to use the target cluster's domain name
 func (p *RestorePlugin) Execute(input *velero.RestoreItemActionExecuteInput) (*velero.RestoreItemActionExecuteOutput, error) {
-	p.Log.Info("Hello from Route RestorePlugin!")
+	p.Log.Info("[route-restore] Hello from Route RestorePlugin!")
 	route := routev1API.Route{}
 	itemMarshal, _ := json.Marshal(input.Item)
 	json.Unmarshal(itemMarshal, &route)
-
-	client, err := clients.CoreClient()
+	version, err := common.GetServerVersion()
 	if err != nil {
 		return nil, err
 	}
-	config, err := client.ConfigMaps("openshift-apiserver").Get("config", metav1.GetOptions{})
+	major, err := strconv.Atoi(version.Major)
 	if err != nil {
 		return nil, err
 	}
-	serverConfig := common.APIServerConfig{}
-	err = json.Unmarshal([]byte(config.Data["config.yaml"]), &serverConfig)
+	minor, err := strconv.Atoi(version.Minor)
 	if err != nil {
 		return nil, err
 	}
+	// Only check for configmap if running on 1.12+
+	if major == 1 && minor > 11 {
+		client, err := clients.CoreClient()
+		if err != nil {
+			return nil, err
+		}
+		config, err := client.ConfigMaps("openshift-apiserver").Get("config", metav1.GetOptions{})
+		if err != nil {
+			return nil, err
+		}
+		serverConfig := common.APIServerConfig{}
+		err = json.Unmarshal([]byte(config.Data["config.yaml"]), &serverConfig)
+		if err != nil {
+			return nil, err
+		}
 
-	subdomain := serverConfig.RoutingConfig.Subdomain
+		subdomain := serverConfig.RoutingConfig.Subdomain
 
-	output := replaceSubdomain(input.Item, &route, subdomain)
+		output := replaceSubdomain(input.Item, &route, subdomain)
+		return output, nil
+	}
+	p.Log.Info("[route-restore] Restore cluster is 3.X so skipping route subdomain replacement")
 
-	return output, nil
+	return velero.NewRestoreItemActionExecuteOutput(input.Item), nil
 }
 
 func replaceSubdomain(item runtime.Unstructured, route *routev1API.Route, subdomain string) *velero.RestoreItemActionExecuteOutput {

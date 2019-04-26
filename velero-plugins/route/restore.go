@@ -2,6 +2,7 @@ package route
 
 import (
 	"encoding/json"
+	"strconv"
 	"strings"
 
 	"github.com/fusor/ocp-velero-plugin/velero-plugins/clients"
@@ -35,8 +36,17 @@ func (p *RestorePlugin) Execute(input *velero.RestoreItemActionExecuteInput) (*v
 	if err != nil {
 		return nil, err
 	}
-	if version.Major == "4" {
-		client, err := clients.NewCoreClient()
+	major, err := strconv.Atoi(version.Major)
+	if err != nil {
+		return nil, err
+	}
+	minor, err := strconv.Atoi(version.Minor)
+	if err != nil {
+		return nil, err
+	}
+	// Only check for configmap if running on 1.12+
+	if major == 1 && minor > 11 {
+		client, err := clients.CoreClient()
 		if err != nil {
 			return nil, err
 		}
@@ -56,7 +66,7 @@ func (p *RestorePlugin) Execute(input *velero.RestoreItemActionExecuteInput) (*v
 		return output, nil
 	}
 
-	return nil, nil
+	return velero.NewRestoreItemActionExecuteOutput(input.Item), nil
 }
 
 func replaceSubdomain(item runtime.Unstructured, route *routev1API.Route, subdomain string) *velero.RestoreItemActionExecuteOutput {

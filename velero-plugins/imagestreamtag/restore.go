@@ -31,7 +31,7 @@ func (p *RestorePlugin) AppliesTo() (velero.ResourceSelector, error) {
 func (p *RestorePlugin) Execute(input *velero.RestoreItemActionExecuteInput) (*velero.RestoreItemActionExecuteOutput, error) {
 	p.Log.Info("[istag-restore] Hello from ImageStreamTag RestorePlugin!")
 
-	if input.Restore.Annotations[common.MigrateTypeAnnotation] != "" {
+	if input.Restore.Annotations[common.MigrateCopyPhaseAnnotation] != "" {
 		imageStreamTag := imagev1API.ImageStreamTag{}
 		itemMarshal, _ := json.Marshal(input.Item)
 		json.Unmarshal(itemMarshal, &imageStreamTag)

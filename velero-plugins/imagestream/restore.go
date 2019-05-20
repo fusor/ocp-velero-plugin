@@ -37,7 +37,7 @@ func (p *RestorePlugin) Execute(input *velero.RestoreItemActionExecuteInput) (*v
 		annotations = make(map[string]string)
 	}
 
-	if input.Restore.Annotations[common.MigrateTypeAnnotation] != "" {
+	if input.Restore.Annotations[common.MigrateCopyPhaseAnnotation] != "" {
 		imageStreamUnmodified := imagev1API.ImageStream{}
 		itemMarshal, _ = json.Marshal(input.ItemFromBackup)
 		json.Unmarshal(itemMarshal, &imageStreamUnmodified)

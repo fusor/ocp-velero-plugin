@@ -31,8 +31,7 @@ func (p *RestorePlugin) Execute(input *velero.RestoreItemActionExecuteInput) (*v
 	json.Unmarshal(itemMarshal, &daemonSet)
 	p.Log.Infof("[daemonset-restore] daemonset: %s", daemonSet.Name)
 
-	if input.Restore.Annotations[common.MigrateTypeAnnotation] == "swing" ||
-		input.Restore.Annotations[common.MigrateCopyPhaseAnnotation] == "final" {
+	if input.Restore.Annotations[common.MigrateCopyPhaseAnnotation] != "" {
 
 		backupRegistry, registry, err := common.GetSrcAndDestRegistryInfo(input.Item)
 		if err != nil {

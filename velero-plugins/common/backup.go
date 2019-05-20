@@ -29,18 +29,20 @@ func (p *BackupPlugin) Execute(item runtime.Unstructured, backup *v1.Backup) (ru
 		return nil, nil, err
 	}
 
-	version, err := GetServerVersion()
-	if err != nil {
-		return nil, nil, err
-	}
+	if backup.Annotations[MigrateCopyPhaseAnnotation] != "" {
+		version, err := GetServerVersion()
+		if err != nil {
+			return nil, nil, err
+		}
 
-	annotations[BackupServerVersion] = fmt.Sprintf("%v.%v", version.Major, version.Minor)
-	registryHostname, err := GetRegistryInfo(version.Major, version.Minor)
-	if err != nil {
-		return nil, nil, err
+		annotations[BackupServerVersion] = fmt.Sprintf("%v.%v", version.Major, version.Minor)
+		registryHostname, err := GetRegistryInfo(version.Major, version.Minor)
+		if err != nil {
+			return nil, nil, err
+		}
+		annotations[BackupRegistryHostname] = registryHostname
+		metadata.SetAnnotations(annotations)
 	}
-	annotations[BackupRegistryHostname] = registryHostname
-	metadata.SetAnnotations(annotations)
 
 	return item, nil, nil
 }

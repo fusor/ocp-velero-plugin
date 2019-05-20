@@ -41,7 +41,7 @@ func (p *BackupPlugin) Execute(item runtime.Unstructured, backup *v1.Backup) (ru
 		annotations = make(map[string]string)
 	}
 
-	if backup.Annotations[common.MigrateTypeAnnotation] != "" {
+	if backup.Annotations[common.MigrateCopyPhaseAnnotation] != "" {
 		internalRegistry := annotations[common.BackupRegistryHostname]
 		if len(internalRegistry) == 0 {
 			return nil, nil, errors.New("backup cluster registry not found for annotation \"openshift.io/backup-registry-hostname\"")

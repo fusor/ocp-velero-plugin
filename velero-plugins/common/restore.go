@@ -28,8 +28,7 @@ func (p *RestorePlugin) Execute(input *velero.RestoreItemActionExecuteInput) (*v
 	name := metadata.GetName()
 	p.Log.Infof("common restore plugin for %s", name)
 
-	if input.Restore.Annotations[MigrateTypeAnnotation] == "swing" ||
-		input.Restore.Annotations[MigrateCopyPhaseAnnotation] == "final" {
+	if input.Restore.Annotations[MigrateCopyPhaseAnnotation] != "" {
 
 		version, err := GetServerVersion()
 		if err != nil {

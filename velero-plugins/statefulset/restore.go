@@ -31,8 +31,7 @@ func (p *RestorePlugin) Execute(input *velero.RestoreItemActionExecuteInput) (*v
 	json.Unmarshal(itemMarshal, &statefulSet)
 	p.Log.Infof("[statefulset-restore] statefulset: %s", statefulSet.Name)
 
-	if input.Restore.Annotations[common.MigrateTypeAnnotation] == "swing" ||
-		input.Restore.Annotations[common.MigrateCopyPhaseAnnotation] == "final" {
+	if input.Restore.Annotations[common.MigrateCopyPhaseAnnotation] != "" {
 
 		backupRegistry, registry, err := common.GetSrcAndDestRegistryInfo(input.Item)
 		if err != nil {

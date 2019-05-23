@@ -35,6 +35,7 @@ func (p *RestorePlugin) Execute(input *velero.RestoreItemActionExecuteInput) (*v
 	if input.Restore.Annotations[common.MigrateCopyPhaseAnnotation] == "stage" {
 		common.ConfigureContainerSleep(pod.Spec.Containers, "infinity")
 		common.ConfigureContainerSleep(pod.Spec.InitContainers, "0")
+		pod.Labels[common.PodStageLabel] = "true"
 	} else if input.Restore.Annotations[common.MigrateCopyPhaseAnnotation] != "" {
 
 		registry := pod.Annotations[common.RestoreRegistryHostname]

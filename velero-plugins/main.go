@@ -33,6 +33,7 @@ func main() {
 		RegisterRestoreItemAction("openshift.io/05-route-restore-plugin", newRouteRestorePlugin).
 		RegisterRestoreItemAction("openshift.io/06-build-restore-plugin", newBuildRestorePlugin).
 		RegisterRestoreItemAction("openshift.io/07-pod-restore-plugin", newPodRestorePlugin).
+		RegisterBackupItemAction("openshift.io/08-deploymentconfig-backup-plugin", newDeploymentConfigBackupPlugin).
 		RegisterRestoreItemAction("openshift.io/08-deploymentconfig-restore-plugin", newDeploymentConfigRestorePlugin).
 		RegisterRestoreItemAction("openshift.io/09-replicationcontroller-restore-plugin", newReplicationControllerRestorePlugin).
 		RegisterRestoreItemAction("openshift.io/10-job-restore-plugin", newJobRestorePlugin).
@@ -73,6 +74,10 @@ func newCommonRestorePlugin(logger logrus.FieldLogger) (interface{}, error) {
 
 func newPodRestorePlugin(logger logrus.FieldLogger) (interface{}, error) {
 	return &pod.RestorePlugin{Log: logger}, nil
+}
+
+func newDeploymentConfigBackupPlugin(logger logrus.FieldLogger) (interface{}, error) {
+	return &deploymentconfig.BackupPlugin{Log: logger}, nil
 }
 
 func newDeploymentConfigRestorePlugin(logger logrus.FieldLogger) (interface{}, error) {

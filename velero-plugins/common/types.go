@@ -29,3 +29,5 @@ const MigrateTypeAnnotation string = "openshift.io/migrate-type"
 
 //stage, final. Only valid for copy type.
 const MigrateCopyPhaseAnnotation string = "openshift.io/migrate-copy-phase"
+
+const PodStageLabel string = "migration-stage-pod"

@@ -577,9 +577,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:d085189fc44ba52aa89de57ddc9841848d0ee08c9670ef6d0b07870ddf8b8b7d"
+  digest = "1:c3ba627e43875709bcc79a2584d603d6a25b6d2bc82fcd174b63f0cde5e17dd3"
   name = "github.com/openshift/client-go"
   packages = [
+    "apps/clientset/versioned/scheme",
+    "apps/clientset/versioned/typed/apps/v1",
     "build/clientset/versioned/scheme",
     "build/clientset/versioned/typed/build/v1",
     "image/clientset/versioned/scheme",
@@ -1083,6 +1085,7 @@
     "github.com/openshift/api/build/v1",
     "github.com/openshift/api/image/v1",
     "github.com/openshift/api/route/v1",
+    "github.com/openshift/client-go/apps/clientset/versioned/typed/apps/v1",
     "github.com/openshift/client-go/build/clientset/versioned/typed/build/v1",
     "github.com/openshift/client-go/image/clientset/versioned/typed/image/v1",
     "github.com/openshift/client-go/route/clientset/versioned/typed/route/v1",

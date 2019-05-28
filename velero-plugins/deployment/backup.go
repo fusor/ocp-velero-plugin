@@ -1,4 +1,4 @@
-package deploymentconfig
+package deployment
 
 import (
 	"encoding/json"
@@ -7,8 +7,8 @@ import (
 	"github.com/fusor/ocp-velero-plugin/velero-plugins/common"
 	v1 "github.com/heptio/velero/pkg/apis/velero/v1"
 	"github.com/heptio/velero/pkg/plugin/velero"
-	appsv1 "github.com/openshift/api/apps/v1"
 	"github.com/sirupsen/logrus"
+	appsv1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
@@ -21,7 +21,7 @@ type BackupPlugin struct {
 // AppliesTo returns a backup.ResourceSelector that applies to everything.
 func (p *BackupPlugin) AppliesTo() (velero.ResourceSelector, error) {
 	return velero.ResourceSelector{
-		IncludedResources: []string{"deploymentconfigs"},
+		IncludedResources: []string{"deployments.apps"},
 	}, nil
 }
 
@@ -32,28 +32,29 @@ func (p *BackupPlugin) Execute(item runtime.Unstructured, backup *v1.Backup) (ru
 		return item, nil, nil
 	}
 
-	p.Log.Info("[deploymentconfig-backup] Hello from DeploymentConfig Backup plugin")
+	p.Log.Info("[deployment-backup] Hello from Deployment Backup plugin")
 
 	// Convert to DC
-	backupDC := appsv1.DeploymentConfig{}
+	backupDeployment := appsv1.Deployment{}
 	itemMarshal, _ := json.Marshal(item)
-	json.Unmarshal(itemMarshal, &backupDC)
+	json.Unmarshal(itemMarshal, &backupDeployment)
 
-	client, err := clients.OCPAppsClient()
+	client, err := clients.AppsClient()
 	if err != nil {
 		return nil, nil, err
 	}
-	// Get and update DC on the running cluster to have 0 replicas if this is
-	// final migration
-	dc, err := client.DeploymentConfigs(backupDC.Namespace).Get(backupDC.Name, metav1.GetOptions{})
+	// Get and update deployment on the running cluster to have 0 replicas if
+	// this is final migration
+	deployment, err := client.Deployments(backupDeployment.Namespace).Get(backupDeployment.Name, metav1.GetOptions{})
 	if err != nil {
 		return nil, nil, err
 	}
 	// Scale down DC
-	dc.Spec.Replicas = 0
+	zeroReplica := int32(0)
+	deployment.Spec.Replicas = &zeroReplica
 
 	// Update DC
-	dc, err = client.DeploymentConfigs(backupDC.Namespace).Update(dc)
+	deployment, err = client.Deployments(backupDeployment.Namespace).Update(deployment)
 	if err != nil {
 		return nil, nil, err
 	}

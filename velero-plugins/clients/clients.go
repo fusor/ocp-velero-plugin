@@ -1,11 +1,12 @@
 package clients
 
 import (
-	appsv1 "github.com/openshift/client-go/apps/clientset/versioned/typed/apps/v1"
+	ocpappsv1 "github.com/openshift/client-go/apps/clientset/versioned/typed/apps/v1"
 	buildv1 "github.com/openshift/client-go/build/clientset/versioned/typed/build/v1"
 	imagev1 "github.com/openshift/client-go/image/clientset/versioned/typed/image/v1"
 	routev1 "github.com/openshift/client-go/route/clientset/versioned/typed/route/v1"
 	"k8s.io/client-go/discovery"
+	appsv1 "k8s.io/client-go/kubernetes/typed/apps/v1"
 	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/rest"
 )
@@ -15,6 +16,9 @@ var coreClientError error
 
 var appsClient *appsv1.AppsV1Client
 var appsClientError error
+
+var ocpAppsClient *ocpappsv1.AppsV1Client
+var ocpAppsClientError error
 
 var imageClient *imagev1.ImageV1Client
 var imageClientError error
@@ -148,11 +152,32 @@ func newAppsClient() (*appsv1.AppsV1Client, error) {
 	return client, nil
 }
 
+// OCPAppsClient returns an openshift AppsV1Client
+func OCPAppsClient() (*ocpappsv1.AppsV1Client, error) {
+	if ocpAppsClient == nil && ocpAppsClientError == nil {
+		ocpAppsClient, ocpAppsClientError = newOCPAppsClient()
+	}
+	return ocpAppsClient, ocpAppsClientError
+}
+
+func newOCPAppsClient() (*ocpappsv1.AppsV1Client, error) {
+	config, err := rest.InClusterConfig()
+	if err != nil {
+		return nil, err
+	}
+	client, err := ocpappsv1.NewForConfig(config)
+	if err != nil {
+		return nil, err
+	}
+	return client, nil
+}
+
 func init() {
 	coreClient, coreClientError = nil, nil
 	imageClient, imageClientError = nil, nil
 	discoveryClient, discoveryClientError = nil, nil
 	routeClient, routeClientError = nil, nil
 	buildClient, buildClientError = nil, nil
+	ocpAppsClient, ocpAppsClientError = nil, nil
 	appsClient, appsClientError = nil, nil
 }

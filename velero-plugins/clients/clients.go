@@ -1,6 +1,7 @@
 package clients
 
 import (
+	appsv1 "github.com/openshift/client-go/apps/clientset/versioned/typed/apps/v1"
 	buildv1 "github.com/openshift/client-go/build/clientset/versioned/typed/build/v1"
 	imagev1 "github.com/openshift/client-go/image/clientset/versioned/typed/image/v1"
 	routev1 "github.com/openshift/client-go/route/clientset/versioned/typed/route/v1"
@@ -11,6 +12,9 @@ import (
 
 var coreClient *corev1.CoreV1Client
 var coreClientError error
+
+var appsClient *appsv1.AppsV1Client
+var appsClientError error
 
 var imageClient *imagev1.ImageV1Client
 var imageClientError error
@@ -124,10 +128,31 @@ func newBuildClient() (*buildv1.BuildV1Client, error) {
 	return client, nil
 }
 
+// AppsClient returns an openshift AppsV1Client
+func AppsClient() (*appsv1.AppsV1Client, error) {
+	if appsClient == nil && appsClientError == nil {
+		appsClient, appsClientError = newAppsClient()
+	}
+	return appsClient, appsClientError
+}
+
+func newAppsClient() (*appsv1.AppsV1Client, error) {
+	config, err := rest.InClusterConfig()
+	if err != nil {
+		return nil, err
+	}
+	client, err := appsv1.NewForConfig(config)
+	if err != nil {
+		return nil, err
+	}
+	return client, nil
+}
+
 func init() {
 	coreClient, coreClientError = nil, nil
 	imageClient, imageClientError = nil, nil
 	discoveryClient, discoveryClientError = nil, nil
 	routeClient, routeClientError = nil, nil
 	buildClient, buildClientError = nil, nil
+	appsClient, appsClientError = nil, nil
 }

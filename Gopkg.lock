@@ -1043,11 +1043,12 @@
   version = "kubernetes-1.12.0"
 
 [[projects]]
-  digest = "1:ec8669e2077877201abdb59da0e0041d0a11c1f2405ff2d3bc2ae68f00928bc2"
+  digest = "1:4d14f9b1d3e46ed66510e1edd9ca79d0590a69307c22db57cf19e0503f7c1f5d"
   name = "k8s.io/client-go"
   packages = [
     "discovery",
     "kubernetes/scheme",
+    "kubernetes/typed/apps/v1",
     "kubernetes/typed/core/v1",
     "pkg/apis/clientauthentication",
     "pkg/apis/clientauthentication/v1alpha1",
@@ -1102,6 +1103,7 @@
     "k8s.io/apimachinery/pkg/runtime/schema",
     "k8s.io/apimachinery/pkg/version",
     "k8s.io/client-go/discovery",
+    "k8s.io/client-go/kubernetes/typed/apps/v1",
     "k8s.io/client-go/kubernetes/typed/core/v1",
     "k8s.io/client-go/rest",
   ]

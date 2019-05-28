@@ -43,8 +43,8 @@ func (p *BackupPlugin) Execute(item runtime.Unstructured, backup *v1.Backup) (ru
 	if err != nil {
 		return nil, nil, err
 	}
-	// Get and update DC on the running cluster to have 0 replicas if this is
-	// final migration
+	// Get and update deployment on the running cluster to have 0 replicas if
+	// this is final migration
 	deployment, err := client.Deployments(backupDeployment.Namespace).Get(backupDeployment.Name, metav1.GetOptions{})
 	if err != nil {
 		return nil, nil, err

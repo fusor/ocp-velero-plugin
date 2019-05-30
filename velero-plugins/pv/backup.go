@@ -45,7 +45,7 @@ func (p *BackupPlugin) Execute(item runtime.Unstructured, backup *v1.Backup) (ru
 		return nil, nil, err
 	}
 	// Set reclaimPolicy to retain if swinging PV
-	if backup.Annotations[common.MigrateTypeAnnotation] == "swing" {
+	if pv.Annotations[common.MigrateTypeAnnotation] == "move" {
 		pv.Spec.PersistentVolumeReclaimPolicy = corev1API.PersistentVolumeReclaimRetain
 	}
 

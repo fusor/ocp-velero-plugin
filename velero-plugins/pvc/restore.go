@@ -33,7 +33,7 @@ func (p *RestorePlugin) Execute(input *velero.RestoreItemActionExecuteInput) (*v
 
 	// Use default behavior (restore the PV) for a swing migration.
 	// For copy we remove annotations and PV volumeName
-	if input.Restore.Annotations[common.MigrateTypeAnnotation] == "copy" {
+	if pvc.Annotations[common.MigrateTypeAnnotation] == "copy" {
 		pvc.Spec.VolumeName = ""
 		delete(pvc.Annotations, "pv.kubernetes.io/bind-completed")
 		delete(pvc.Annotations, "pv.kubernetes.io/bound-by-controller")

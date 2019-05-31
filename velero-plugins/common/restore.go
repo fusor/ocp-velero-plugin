@@ -19,14 +19,14 @@ func (p *RestorePlugin) AppliesTo() (velero.ResourceSelector, error) {
 
 // Execute sets a custom annotation on the item being restored.
 func (p *RestorePlugin) Execute(input *velero.RestoreItemActionExecuteInput) (*velero.RestoreItemActionExecuteOutput, error) {
-	p.Log.Info("Hello from common restore plugin!!")
+	p.Log.Info("[common-restore] Entering common restore plugin")
 
 	metadata, annotations, err := getMetadataAndAnnotations(input.Item)
 	if err != nil {
 		return nil, err
 	}
 	name := metadata.GetName()
-	p.Log.Infof("common restore plugin for %s", name)
+	p.Log.Infof("[common-restore] common restore plugin for %s", name)
 
 	if input.Restore.Annotations[MigrateCopyPhaseAnnotation] != "" {
 

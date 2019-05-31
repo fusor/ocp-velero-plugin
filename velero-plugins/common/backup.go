@@ -22,7 +22,7 @@ func (p *BackupPlugin) AppliesTo() (velero.ResourceSelector, error) {
 
 // Execute sets a custom annotation on the item being backed up.
 func (p *BackupPlugin) Execute(item runtime.Unstructured, backup *v1.Backup) (runtime.Unstructured, []velero.ResourceIdentifier, error) {
-	p.Log.Info("Hello from common backup plugin!!")
+	p.Log.Info("[common-backup] Entering common backup plugin")
 
 	metadata, annotations, err := getMetadataAndAnnotations(item)
 	if err != nil {

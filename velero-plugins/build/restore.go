@@ -30,7 +30,7 @@ func (p *RestorePlugin) AppliesTo() (velero.ResourceSelector, error) {
 
 // Execute action for the restore plugin for the build resource
 func (p *RestorePlugin) Execute(input *velero.RestoreItemActionExecuteInput) (*velero.RestoreItemActionExecuteOutput, error) {
-	p.Log.Info("Hello from Build RestorePlugin!")
+	p.Log.Info("[build-restore] Entering build restore plugin")
 
 	build := buildv1API.Build{}
 	itemMarshal, _ := json.Marshal(input.Item)
@@ -41,11 +41,11 @@ func (p *RestorePlugin) Execute(input *velero.RestoreItemActionExecuteInput) (*v
 	if err != nil {
 		// TODO: Come back to this. This is ugly, should really return some type
 		// of error but I don't know what that is exactly
-		p.Log.Error("Skipping build: ", err)
+		p.Log.Error("[build-restore] Skipping build: ", err)
 		return velero.NewRestoreItemActionExecuteOutput(input.Item), nil
 	}
 
-	p.Log.Info(fmt.Sprintf("Found new dockercfg secret: %v", secret))
+	p.Log.Info(fmt.Sprintf("[build-restore] Found new dockercfg secret: %v", secret))
 	build = createNewPushSecret(build, secret)
 
 	registry := build.Annotations[common.RestoreRegistryHostname]
@@ -57,7 +57,7 @@ func (p *RestorePlugin) Execute(input *velero.RestoreItemActionExecuteInput) (*v
 	name := build.Spec.Strategy.SourceStrategy.From.Name
 	if !common.HasImageRefPrefix(name, build.Annotations[common.BackupRegistryHostname]) {
 		// Does not have internal registry hostname, skip
-		p.Log.Errorf("build is not from internal image, skipping")
+		p.Log.Errorf("[build-restore] build is not from internal image, skipping")
 		return velero.NewRestoreItemActionExecuteOutput(input.Item), nil
 	}
 	shaSplit := strings.Split(name, "@")

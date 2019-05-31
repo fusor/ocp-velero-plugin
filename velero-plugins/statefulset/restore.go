@@ -24,7 +24,7 @@ func (p *RestorePlugin) AppliesTo() (velero.ResourceSelector, error) {
 
 // Execute action for the restore plugin for the statefulset resource
 func (p *RestorePlugin) Execute(input *velero.RestoreItemActionExecuteInput) (*velero.RestoreItemActionExecuteOutput, error) {
-	p.Log.Info("[statefulset-restore] Hello from StatefulSet RestorePlugin!")
+	p.Log.Info("[statefulset-restore] Entering StatefulSet restore plugin")
 
 	statefulSet := appsv1API.StatefulSet{}
 	itemMarshal, _ := json.Marshal(input.Item)

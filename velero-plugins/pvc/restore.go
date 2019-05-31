@@ -24,7 +24,7 @@ func (p *RestorePlugin) AppliesTo() (velero.ResourceSelector, error) {
 
 // Execute action for the restore plugin for the pvc resource
 func (p *RestorePlugin) Execute(input *velero.RestoreItemActionExecuteInput) (*velero.RestoreItemActionExecuteOutput, error) {
-	p.Log.Info("[pvc-restore] Hello from PVC RestorePlugin!")
+	p.Log.Info("[pvc-restore] Entering Persistent Volume Claim restore plugin")
 
 	pvc := corev1API.PersistentVolumeClaim{}
 	itemMarshal, _ := json.Marshal(input.Item)
@@ -34,6 +34,7 @@ func (p *RestorePlugin) Execute(input *velero.RestoreItemActionExecuteInput) (*v
 	// Use default behavior (restore the PV) for a swing migration.
 	// For copy we remove annotations and PV volumeName
 	if pvc.Annotations[common.MigrateTypeAnnotation] == "copy" {
+		p.Log.Info("[pvc-restore] Removing PV specific information since we are copying")
 		pvc.Spec.VolumeName = ""
 		delete(pvc.Annotations, "pv.kubernetes.io/bind-completed")
 		delete(pvc.Annotations, "pv.kubernetes.io/bound-by-controller")

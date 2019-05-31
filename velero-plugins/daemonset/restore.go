@@ -24,7 +24,7 @@ func (p *RestorePlugin) AppliesTo() (velero.ResourceSelector, error) {
 
 // Execute action for the restore plugin for the daemonset resource
 func (p *RestorePlugin) Execute(input *velero.RestoreItemActionExecuteInput) (*velero.RestoreItemActionExecuteOutput, error) {
-	p.Log.Info("[daemonset-restore] Hello from DaemonSet RestorePlugin!")
+	p.Log.Info("[daemonset-restore] Entering DaemonSet restore plugin")
 
 	daemonSet := appsv1API.DaemonSet{}
 	itemMarshal, _ := json.Marshal(input.Item)

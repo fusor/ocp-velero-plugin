@@ -26,7 +26,7 @@ func (p *RestorePlugin) AppliesTo() (velero.ResourceSelector, error) {
 
 // Execute copies local registry images from migration registry into target cluster local registry
 func (p *RestorePlugin) Execute(input *velero.RestoreItemActionExecuteInput) (*velero.RestoreItemActionExecuteOutput, error) {
-	p.Log.Info("[is-restore] Hello from ImageStream RestorePlugin!")
+	p.Log.Info("[is-restore] Entering ImageStream restore plugin")
 
 	imageStream := imagev1API.ImageStream{}
 	itemMarshal, _ := json.Marshal(input.Item)

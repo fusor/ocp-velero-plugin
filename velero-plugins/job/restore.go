@@ -24,7 +24,7 @@ func (p *RestorePlugin) AppliesTo() (velero.ResourceSelector, error) {
 
 // Execute action for the restore plugin for the job resource
 func (p *RestorePlugin) Execute(input *velero.RestoreItemActionExecuteInput) (*velero.RestoreItemActionExecuteOutput, error) {
-	p.Log.Info("[job-restore] Hello from Job RestorePlugin!")
+	p.Log.Info("[job-restore] Entering Job restore plugin")
 
 	job := batchv1API.Job{}
 	itemMarshal, _ := json.Marshal(input.Item)

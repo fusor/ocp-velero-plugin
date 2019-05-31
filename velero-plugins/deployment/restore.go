@@ -24,7 +24,7 @@ func (p *RestorePlugin) AppliesTo() (velero.ResourceSelector, error) {
 
 // Execute action for the restore plugin for the deployment resource
 func (p *RestorePlugin) Execute(input *velero.RestoreItemActionExecuteInput) (*velero.RestoreItemActionExecuteOutput, error) {
-	p.Log.Info("[deployment-restore] Hello from Deployment RestorePlugin!")
+	p.Log.Info("[deployment-restore] Entering Deployment restore plugin")
 
 	deployment := appsv1API.Deployment{}
 	itemMarshal, _ := json.Marshal(input.Item)

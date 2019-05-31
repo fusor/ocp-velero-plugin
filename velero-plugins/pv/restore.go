@@ -24,7 +24,7 @@ func (p *RestorePlugin) AppliesTo() (velero.ResourceSelector, error) {
 
 // Execute action for the restore plugin for the pv resource
 func (p *RestorePlugin) Execute(input *velero.RestoreItemActionExecuteInput) (*velero.RestoreItemActionExecuteOutput, error) {
-	p.Log.Info("[pv-restore] Hello from PV RestorePlugin!")
+	p.Log.Info("[pv-restore] Entering Persistent Volume restore plugin")
 
 	pv := corev1API.PersistentVolume{}
 	itemMarshal, _ := json.Marshal(input.Item)

@@ -30,7 +30,7 @@ func (p *BackupPlugin) AppliesTo() (velero.ResourceSelector, error) {
 
 // Execute copies local registry images into migration registry
 func (p *BackupPlugin) Execute(item runtime.Unstructured, backup *v1.Backup) (runtime.Unstructured, []velero.ResourceIdentifier, error) {
-	p.Log.Info("[is-backup] Hello from Imagestream backup plugin!!")
+	p.Log.Info("[is-backup] Entering Imagestream backup plugin")
 
 	im := imagev1API.ImageStream{}
 	itemMarshal, _ := json.Marshal(item)

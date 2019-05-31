@@ -24,7 +24,7 @@ func (p *RestorePlugin) AppliesTo() (velero.ResourceSelector, error) {
 
 // Execute action for the restore plugin for the replication controller resource
 func (p *RestorePlugin) Execute(input *velero.RestoreItemActionExecuteInput) (*velero.RestoreItemActionExecuteOutput, error) {
-	p.Log.Info("[replicationcontroller-restore] Hello from ReplicationController RestorePlugin!")
+	p.Log.Info("[replicationcontroller-restore] Entering ReplicationController restore plugin")
 
 	replicationController := corev1API.ReplicationController{}
 	itemMarshal, _ := json.Marshal(input.Item)

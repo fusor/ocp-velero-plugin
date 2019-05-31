@@ -24,7 +24,7 @@ func (p *RestorePlugin) AppliesTo() (velero.ResourceSelector, error) {
 
 // Execute action for the restore plugin for the replicaset resource
 func (p *RestorePlugin) Execute(input *velero.RestoreItemActionExecuteInput) (*velero.RestoreItemActionExecuteOutput, error) {
-	p.Log.Info("[replicaset-restore] Hello from ReplicaSet RestorePlugin!")
+	p.Log.Info("[replicaset-restore] Entering ReplicaSet restore plugin")
 
 	replicaSet := appsv1API.ReplicaSet{}
 	itemMarshal, _ := json.Marshal(input.Item)
@@ -32,7 +32,6 @@ func (p *RestorePlugin) Execute(input *velero.RestoreItemActionExecuteInput) (*v
 	p.Log.Infof("[replicaset-restore] replicaset: %s", replicaSet.Name)
 
 	if input.Restore.Annotations[common.MigrateCopyPhaseAnnotation] != "" {
-
 		backupRegistry, registry, err := common.GetSrcAndDestRegistryInfo(input.Item)
 		if err != nil {
 			return nil, err

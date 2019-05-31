@@ -32,7 +32,7 @@ func (p *BackupPlugin) Execute(item runtime.Unstructured, backup *v1.Backup) (ru
 		return item, nil, nil
 	}
 
-	p.Log.Info("[deployment-backup] Hello from Deployment Backup plugin")
+	p.Log.Info("[deployment-backup] Entering Deployment backup plugin")
 
 	// Convert to DC
 	backupDeployment := appsv1.Deployment{}

@@ -27,7 +27,7 @@ func (p *BackupPlugin) AppliesTo() (velero.ResourceSelector, error) {
 
 // Execute sets a custom annotation on the item being backed up.
 func (p *BackupPlugin) Execute(item runtime.Unstructured, backup *v1.Backup) (runtime.Unstructured, []velero.ResourceIdentifier, error) {
-	p.Log.Info("Hello from PV backup plugin!!")
+	p.Log.Info("[pv-backup] Entering Persistent Volume backup plugin")
 
 	// Convert to PV
 	backupPV := corev1API.PersistentVolume{}
@@ -46,6 +46,7 @@ func (p *BackupPlugin) Execute(item runtime.Unstructured, backup *v1.Backup) (ru
 	}
 	// Set reclaimPolicy to retain if swinging PV
 	if pv.Annotations[common.MigrateTypeAnnotation] == "move" {
+		p.Log.Info("[pv-backup] Setting reclaim policy to Retain to properly move PV")
 		pv.Spec.PersistentVolumeReclaimPolicy = corev1API.PersistentVolumeReclaimRetain
 	}
 

@@ -28,7 +28,7 @@ func (p *RestorePlugin) AppliesTo() (velero.ResourceSelector, error) {
 
 // Execute fixes the route path on restore to use the target cluster's domain name
 func (p *RestorePlugin) Execute(input *velero.RestoreItemActionExecuteInput) (*velero.RestoreItemActionExecuteOutput, error) {
-	p.Log.Info("[route-restore] Hello from Route RestorePlugin!")
+	p.Log.Info("[route-restore] Entering Route restore plugin")
 	route := routev1API.Route{}
 	itemMarshal, _ := json.Marshal(input.Item)
 	json.Unmarshal(itemMarshal, &route)

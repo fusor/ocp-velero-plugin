@@ -51,7 +51,7 @@ func (p *RestorePlugin) Execute(input *velero.RestoreItemActionExecuteInput) (*v
 			return nil, err
 		}
 		// Check if pod has owner Refs and does not have restic backup associated with it
-		if len(ownerRefs) > 0 && pod.Annotations[common.ResticBackupAnnotation] != "" {
+		if len(ownerRefs) > 0 && pod.Annotations[common.ResticBackupAnnotation] == "" {
 			p.Log.Infof("[pod-restore] skipping restore of pod %s, has owner references and no restic backup", pod.Name)
 			return velero.NewRestoreItemActionExecuteOutput(input.Item).WithoutRestore(), nil
 		}

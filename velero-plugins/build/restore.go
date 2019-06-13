@@ -86,7 +86,9 @@ func (p *RestorePlugin) Execute(input *velero.RestoreItemActionExecuteInput) (*v
 	// if it is not sourceBuildStrategyType
 	build.Spec.Strategy.SourceStrategy.From.Name = newName
 	for _, trigger := range build.Spec.TriggeredBy {
-		trigger.ImageChangeBuild.ImageID = newName
+		if trigger.ImageChangeBuild != nil {
+			trigger.ImageChangeBuild.ImageID = newName
+		}
 	}
 
 	var out map[string]interface{}

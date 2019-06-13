@@ -386,7 +386,7 @@
 
 [[projects]]
   branch = "fusor-dev"
-  digest = "1:1b0ee194f20c0cc0cd356f47ad25e60e2b1faabe39c3fb029c8c1d868ef6cc1b"
+  digest = "1:c895a3a027647f87e8b0adc710221c25ae0302529327b5aff356ee367c46486e"
   name = "github.com/heptio/velero"
   packages = [
     "pkg/apis/velero/v1",
@@ -397,7 +397,7 @@
     "pkg/util/logging",
   ]
   pruneopts = "NUT"
-  revision = "3a6db53e156389045cde53bd267737e0860b2845"
+  revision = "93750b31b8b3cdccde99f06a1d478b881633a387"
   source = "github.com/fusor/velero.git"
 
 [[projects]]

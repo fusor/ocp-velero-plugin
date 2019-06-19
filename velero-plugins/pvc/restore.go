@@ -31,6 +31,9 @@ func (p *RestorePlugin) Execute(input *velero.RestoreItemActionExecuteInput) (*v
 	json.Unmarshal(itemMarshal, &pvc)
 	p.Log.Infof("[pvc-restore] pvc: %s", pvc.Name)
 
+	// delete temporary annotations and labels used by mig-controller during backup
+	common.DeleteTemporaryKeys(pvc.Labels, pvc.Annotations)
+
 	// Use default behavior (restore the PV) for a swing migration.
 	// For copy we remove annotations and PV volumeName
 	if pvc.Annotations[common.MigrateTypeAnnotation] == "copy" {

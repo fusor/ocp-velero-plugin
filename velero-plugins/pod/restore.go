@@ -32,6 +32,9 @@ func (p *RestorePlugin) Execute(input *velero.RestoreItemActionExecuteInput) (*v
 	json.Unmarshal(itemMarshal, &pod)
 	p.Log.Infof("[pod-restore] pod: %s", pod.Name)
 
+	// delete temporary annotations and labels used by mig-controller during backup
+	common.DeleteTemporaryKeys(pod.Labels, pod.Annotations)
+
 	if input.Restore.Annotations[common.MigrateCopyPhaseAnnotation] == "stage" {
 		common.ConfigureContainerSleep(pod.Spec.Containers, "infinity")
 		common.ConfigureContainerSleep(pod.Spec.InitContainers, "0")

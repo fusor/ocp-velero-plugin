@@ -11,6 +11,12 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
+// temporary keys added by mig-controller
+const (
+	transientBackupAnnotationKey = "openshift.io/migrate-type"
+	transientBackupLabelKey      = "openshift.io/pv-backup"
+)
+
 // ReplaceImageRefPrefix replaces an image reference prefix with newPrefix.
 // If the input image reference does not start with oldPrefix, an error is returned
 func ReplaceImageRefPrefix(s, oldPrefix, newPrefix string) (string, error) {
@@ -125,4 +131,19 @@ func GetOwnerReferences(item runtime.Unstructured) ([]metav1.OwnerReference, err
 		return nil, err
 	}
 	return metadata.GetOwnerReferences(), nil
+}
+
+// DeleteTemporaryKeys : deletes temporary annotations and labels added by mig-controller during backup
+func DeleteTemporaryKeys(labels map[string]string, annotations map[string]string) {
+	delete(annotations, transientBackupAnnotationKey)
+	// transient labels have unique UID's at the end, need to delete all of them
+	transientLabels := make([]string, len(labels))
+	for label := range labels {
+		if strings.Contains(label, transientBackupLabelKey) {
+			transientLabels = append(transientLabels, label)
+		}
+	}
+	for _, label := range transientLabels {
+		delete(labels, label)
+	}
 }

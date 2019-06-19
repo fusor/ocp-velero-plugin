@@ -31,6 +31,9 @@ func (p *RestorePlugin) Execute(input *velero.RestoreItemActionExecuteInput) (*v
 	json.Unmarshal(itemMarshal, &pv)
 	p.Log.Infof("[pv-restore] pv: %s", pv.Name)
 
+	// delete temporary annotations and labels used by mig-controller during backup
+	common.DeleteTemporaryKeys(pv.Labels, pv.Annotations)
+
 	if pv.Annotations[common.MigrateTypeAnnotation] == "copy" {
 		p.Log.Infof("[pv-restore] Not a swing PV migration. Skipping pv restore, %s.", pv.Name)
 		return velero.NewRestoreItemActionExecuteOutput(input.Item).WithoutRestore(), nil

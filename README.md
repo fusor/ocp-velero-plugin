@@ -1,5 +1,16 @@
 # OCP Velero Plugin [![Build Status](https://travis-ci.com/fusor/ocp-velero-plugin.svg?branch=master)](https://travis-ci.com/fusor/ocp-velero-plugin) [![Maintainability](https://api.codeclimate.com/v1/badges/95d3aaf8af1cfdd529c4/maintainability)](https://codeclimate.com/github/fusor/ocp-velero-plugin/maintainability)
 
+## Deprecated
+
+This repo has been deprecated. See
+https://github.com/fusor/ocp-velero-plugin/blob/master/docs/plugin-refactoring.md
+
+The plugin repo located at
+https://github.com/fusor/openshift-migration-plugin is a drop-in
+replacement for this. For a general-purpose velero plugin for backing
+up and restoring namespaces which include openshift-specific resources
+use https://github.com/fusor/openshift-velero-plugin
+
 ## Kinds of Plugins
 
 Velero currently supports the following kinds of plugins:

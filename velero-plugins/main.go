@@ -15,6 +15,7 @@ import (
 	"github.com/fusor/ocp-velero-plugin/velero-plugins/replicaset"
 	"github.com/fusor/ocp-velero-plugin/velero-plugins/replicationcontroller"
 	"github.com/fusor/ocp-velero-plugin/velero-plugins/route"
+	"github.com/fusor/ocp-velero-plugin/velero-plugins/serviceaccount"
 	"github.com/fusor/ocp-velero-plugin/velero-plugins/statefulset"
 	veleroplugin "github.com/heptio/velero/pkg/plugin/framework"
 	"github.com/sirupsen/logrus"
@@ -24,6 +25,7 @@ func main() {
 	veleroplugin.NewServer().
 		RegisterBackupItemAction("openshift.io/01-common-backup-plugin", newCommonBackupPlugin).
 		RegisterRestoreItemAction("openshift.io/01-common-restore-plugin", newCommonRestorePlugin).
+		RegisterRestoreItemAction("openshift.io/02-serviceaccount-restore-plugin", newServiceAccountRestorePlugin).
 		RegisterBackupItemAction("openshift.io/02-pv-backup-plugin", newPVBackupPlugin).
 		RegisterRestoreItemAction("openshift.io/03-pv-restore-plugin", newPVRestorePlugin).
 		RegisterRestoreItemAction("openshift.io/03-pvc-restore-plugin", newPVCRestorePlugin).
@@ -107,6 +109,10 @@ func newReplicaSetRestorePlugin(logger logrus.FieldLogger) (interface{}, error) 
 
 func newDaemonSetRestorePlugin(logger logrus.FieldLogger) (interface{}, error) {
 	return &daemonset.RestorePlugin{Log: logger}, nil
+}
+
+func newServiceAccountRestorePlugin(logger logrus.FieldLogger) (interface{}, error) {
+	return &serviceaccount.RestorePlugin{Log: logger}, nil
 }
 
 func newStatefulSetRestorePlugin(logger logrus.FieldLogger) (interface{}, error) {

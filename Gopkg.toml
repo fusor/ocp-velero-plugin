@@ -31,6 +31,10 @@
   branch = "master"
 
 [[constraint]]
+  name = "github.com/openshift/library-go"
+  branch = "release-4.2"
+
+[[constraint]]
   name = "github.com/heptio/velero"
   branch = "fusor-dev"
   source = "github.com/fusor/velero.git"

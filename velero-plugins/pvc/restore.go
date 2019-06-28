@@ -42,6 +42,8 @@ func (p *RestorePlugin) Execute(input *velero.RestoreItemActionExecuteInput) (*v
 		// ISSUE-61 : removing the label selectors from PVC's
 		// to avoid PV dynamic provisioner getting stuck
 		pvc.Spec.Selector = nil
+		// ISSUE-61 : remove storage class name to fallback to default storage class
+		pvc.Spec.StorageClassName = nil
 	}
 
 	var out map[string]interface{}

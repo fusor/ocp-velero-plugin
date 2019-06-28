@@ -34,7 +34,6 @@ func (p *RestorePlugin) Execute(input *velero.RestoreItemActionExecuteInput) (*v
 
 	// ISSUE-61 : removing the node selectors from pods
 	// to avoid pod never getting `unscheduled` on destination
-	p.Log.Infof("[pod-restore] Pranav")
 	pod.Spec.NodeSelector = nil
 
 	if input.Restore.Annotations[common.MigrateCopyPhaseAnnotation] == "stage" {

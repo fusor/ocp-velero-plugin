@@ -32,6 +32,11 @@ func (p *RestorePlugin) Execute(input *velero.RestoreItemActionExecuteInput) (*v
 	json.Unmarshal(itemMarshal, &pod)
 	p.Log.Infof("[pod-restore] pod: %s", pod.Name)
 
+	// ISSUE-61 : removing the node selectors from pods
+	// to avoid pod never getting `unscheduled` on destination
+	p.Log.Infof("[pod-restore] Pranav")
+	pod.Spec.NodeSelector = nil
+
 	if input.Restore.Annotations[common.MigrateCopyPhaseAnnotation] == "stage" {
 		common.ConfigureContainerSleep(pod.Spec.Containers, "infinity")
 		common.ConfigureContainerSleep(pod.Spec.InitContainers, "0")

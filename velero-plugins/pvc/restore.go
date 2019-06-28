@@ -38,6 +38,10 @@ func (p *RestorePlugin) Execute(input *velero.RestoreItemActionExecuteInput) (*v
 		pvc.Spec.VolumeName = ""
 		delete(pvc.Annotations, "pv.kubernetes.io/bind-completed")
 		delete(pvc.Annotations, "pv.kubernetes.io/bound-by-controller")
+
+		// ISSUE-61 : removing the label selectors from PV's
+		// to avoid dynamically allocated PV's getting stuck
+		pvc.Spec.Selector = nil
 	}
 
 	var out map[string]interface{}
